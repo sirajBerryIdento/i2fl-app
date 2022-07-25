@@ -128,24 +128,28 @@ function deleteLeave(dateLeave) {
 
     var luccaToFitnetDateFormat = Helper.luccaToFitnetDateConvertor(day, month, year);
     fitnetLeaveObj = FitnetManagerService.fitnetGetLeave(companyId, month, year);
-
+    console.log("luccaToFitnetDateFormat", luccaToFitnetDateFormat)
     fitnetLeaveObj.then(response => response.json())
         .then(leaves => {
             if (leaves) {
                 leaves.forEach(leave => {
+                    console.log("leave: ", leave)
                     if (leave.beginDate === luccaToFitnetDateFormat) {
+                        console.log("inside the if statment, id found is: ", leave.leaveId)
                         deleteLeavePromise = FitnetManagerService.fitnetDeleteLeave(leave.leaveId);
-                        deleteLeavePromise.then((res) => { console.log("leave request with id " + leave.leaveId + " was deleted successfully") }).catch((error) => {
+                        deleteLeavePromise.then((res) => {
+                            console.log("leave request with id " + leave.leaveId + " was deleted successfully")
+                            reInitializeVariables();
+                        }).catch((error) => {
                             console.log("error: ", error);
                         });
-                        reInitializeVariables();
+                        console.log("inside")
                     }
                 }
                 );
             }
         })
-
-    reInitializeVariables();
+    console.log("outside")
 }
 
 async function setLeaves(fitnetLeaveRequest) {

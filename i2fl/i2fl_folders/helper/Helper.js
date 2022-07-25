@@ -23,7 +23,7 @@ function isHalfDay(luccaLeaves, id) {
 //yyyy-MM-dd to dd/MM/yyyy
 function luccaToFitnetDateConvertor(day, month, year) {
     console.log('day, month, year: ',day, month, year);
-    return day + "/" + ((month > 9) ? month : '0' + month) + "/" + year;
+    return ((day > 9) ? day : '0' + day) + "/" + ((month > 9) ? month : '0' + month) + "/" + year;
 }
 function isAm (id) {
     r = id.split('-')[2];

@@ -72,7 +72,7 @@ function initialize() {
         else {
             console.log('dateParam still empty', dateParam);
         }
-    }, 7000);
+    }, StaticValues.CALLBACK_INTERVAL);
 }
 
 //initial function

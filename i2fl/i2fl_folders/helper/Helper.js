@@ -31,3 +31,69 @@ function isAm (id) {
 }
 
 module.exports = { getDateFromId, transformToDateFormat,isHalfDay, luccaToFitnetDateConvertor, isAm};
+
+
+//might be hemperful in the future
+function countingConsecutiveLeaves(a) {
+    queue = [];
+    ff = null;
+    allConsecutive = true;
+    if (a != null && a.length > 2) {
+        for (let i = 0; i < a.length; i++) {
+            tf = a[i];
+            ts = a[i + 1];
+            if (ff == null) {
+                ff = tf;
+            }
+            if ( !(Date.parse(ts) - Date.parse(tf) === 86400000) ) {//change here
+                obj = new Leave(ff, a[i])
+                queue.push(obj);
+                ff = null;
+                allConsecutive = false;
+            }
+            else if((Date.parse(ts) - Date.parse(tf) === 86400000) && (i==a.length-2)) {//change here
+                obj = new Leave(ff, ts)
+                allConsecutive = false;
+                queue.push(obj);
+            }
+            if (allConsecutive && i == (a.length - 2)) {
+                obj = new Leave(ff, a[a.length - 1])
+            }
+        }
+    }
+    else {
+        if (a != null && a.length == 2) {
+            tf = a[0]
+            ts = a[1]
+            if (Date.parse(ts) - Date.parse(tf) === 86400000) {
+                obj = new Leave(tf, ts)
+                queue.push(obj)
+            }
+            else {
+                obj1 = new Leave(tf, tf)
+                queue.push(obj1)
+
+                obj2 = new Leave(ts, ts)
+                queue.push(obj2)
+            }
+        }
+        else if (a != null &&  a.length == 1) {
+            tf = a[0]
+            ts = a[1]
+            obj = new Leave(tf, ts)
+            queue.push(obj)
+        }
+        else {
+            console.log('null array')
+        }
+    }
+    queue = queue.filter((thing, index) => {
+        const _thing = JSON.stringify(thing);
+        return index === queue.findIndex(obj => {
+          return JSON.stringify(obj) === _thing;
+        });
+      })
+    console.log("queue: ", queue)
+    queue = [];
+    allConsecutive = true;
+}

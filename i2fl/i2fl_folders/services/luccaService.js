@@ -12,4 +12,16 @@ async function getLeavesAPI(ownerId, date, paging) {
 }
 
 
-module.exports = { getLeavesAPI };
+
+async function getURL(url) {
+    const response = await fetch(url, {
+        method: 'get',
+        headers: {
+            Authorization: StaticValues.LUCCA_ACCESS_TOKEN
+        },
+    });
+    return response;
+}
+
+
+module.exports = { getLeavesAPI,getURL };

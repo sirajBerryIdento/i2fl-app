@@ -1,4 +1,6 @@
 const FitnetLeave = require('./i2fl_folders/_models/Fitnet.model')
+const Leave = require('./i2fl_folders/_models/Leave.model')
+
 const StaticValues = require('./i2fl_folders/enums/StaticValues.enum')
 const Helper = require("./i2fl_folders/helper/Helper");
 const LuccaService = require("./i2fl_folders/services/luccaService");
@@ -21,7 +23,10 @@ app.get('/', function (req, res) {
 })
 
 
-var dateParam, dateStart, dateEnd, isCancelled;
+var dateParam, dateStart, dateEnd, isCancelled, minDate, maxDate,ownerId;
+var queue = []
+minDate = "2022-09-05";
+maxDate = "2022-10-04";
 app.post('/integrate', function (req, res) {
     payload = res.req.body;
     ownerId = payload.owner.id;
@@ -63,23 +68,107 @@ function reInitializeVariables() {
 //first function to execute
 function initialize() {
     reInitializeVariables();
-    console.log("dateParam typeof", typeof dateParam)
-    console.log("dateParam", dateParam)
     setInterval(() => {
-        if (!(dateParam === '')) {
-            callback();
+        if (!(minDate === '')  && !(maxDate === '') ) {
+            dateParam = 'between,' + minDate + ',' + maxDate;
+            getLuccaLeaves = LuccaService.getLeavesAPI(ownerId, dateParam, StaticValues.PAGING);
+            getLuccaLeaves.then(response => response.json())
+            .then(leaves => {
+                // create a map for this id - object
+                // get all keys: [20221012, 20221013, 20221014,     20220919,20220920,20220921,    20221019,20221020,20221003, 20221004]
+                // create LeaveRequest Object and add it to the queue, its object has the following properties: startdate, enddate, type
+
+
+                //while queue is not looped over it totally
+                    // callback(q[i])
+            })
+            // callback();
         }
         else {
             console.log('dateParam still empty', dateParam);
         }
-    }, StaticValues.CALLBACK_INTERVAL);
+    }, 1000);
 }
+//    a= [1,2,    4,5,6,    11,12    ,14,   16,17];
+function countingConsecutiveLeaves(a) {
+    queue = [];
+    ff = 0;
+    allConsecutive = true;
+    if (a != null && a.length > 2) {
+        for (let i = 0; i < a.length; i++) {
+            tf = a[i];
+            ts = a[i + 1];
+            if (ff == 0) {
+                ff = tf;
+            }
+            if (ts - tf != 1) {
+                obj = new Leave(ff, a[i])
+                queue.push(obj);
+                ff = 0;
+                allConsecutive = false;
+            }
+            else if(((ts - tf) == 1) && (i==a.length-2)) {
+                obj = new Leave(ff, ts)
+                allConsecutive = false;
+                queue.push(obj);
+            }
+            if (allConsecutive && i == (a.length - 2)) {
+                obj = new Leave(ff, a[a.length - 1])
+            }
+        }
+    }
+    else {
+        if (a != null && a.length == 2) {
+            tf = a[0]
+            ts = a[1]
+            if (ts - tf == 1) {
+                obj = new Leave(tf, ts)
+                queue.push(obj)
+            }
+            else {
+                obj1 = new Leave(tf, tf)
+                queue.push(obj1)
 
+                obj2 = new Leave(ts, ts)
+                queue.push(obj2)
+            }
+        }
+        else if (a != null &&  a.length == 1) {
+            tf = a[0]
+            ts = a[1]
+            obj = new Leave(tf, ts)
+            queue.push(obj)
+        }
+        else {
+            console.log('null array')
+        }
+    }
+    console.log("queue: ", queue)
+    queue = [];
+    allConsecutive = true;
+}
 //initial function
 initialize();
 
 app.listen(process.env.PORT || 8088, function () {
     console.log("integrator server listening at 8088")
+    // a = [3,6,7,10,2,8,11,1,12,15]
+    a= [1,2    ,4,5,6  ,11,12   ,14  ,16,17];
+    a1= [11,12]
+    a2 = [11,15]
+    a3=[11,12,13]
+    a4=[11  ,15,16  ,18]
+    a5=null
+    a6=[1,2,3,4,5]
+    a7=[11,12,13,14]
+    countingConsecutiveLeaves(a);
+    countingConsecutiveLeaves(a1);
+    countingConsecutiveLeaves(a2);
+    countingConsecutiveLeaves(a3);
+    countingConsecutiveLeaves(a4);
+    countingConsecutiveLeaves(a5);
+    countingConsecutiveLeaves(a6);
+    countingConsecutiveLeaves(a7);
 })
 
 //functions

@@ -89,7 +89,6 @@ function initialize() {
         }
     }, 1000);
 }
-//    a= [1,2,    4,5,6,    11,12    ,14,   16,17];
 function countingConsecutiveLeaves(a) {
     queue = [];
     ff = 0;
@@ -143,6 +142,12 @@ function countingConsecutiveLeaves(a) {
             console.log('null array')
         }
     }
+    queue = queue.filter((thing, index) => {
+        const _thing = JSON.stringify(thing);
+        return index === queue.findIndex(obj => {
+          return JSON.stringify(obj) === _thing;
+        });
+      })
     console.log("queue: ", queue)
     queue = [];
     allConsecutive = true;
@@ -152,7 +157,7 @@ initialize();
 
 app.listen(process.env.PORT || 8088, function () {
     console.log("integrator server listening at 8088")
-    // a = [3,6,7,10,2,8,11,1,12,15]
+    a = [3,6,7,10,2,8,11,1,12,15]
     a= [1,2    ,4,5,6  ,11,12   ,14  ,16,17];
     a1= [11,12]
     a2 = [11,15]

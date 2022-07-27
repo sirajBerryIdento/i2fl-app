@@ -28,24 +28,23 @@ email = "siraj.berry@idento.fr"
 var leaveRequestsQueue = [];
 var datesArray = [];
 var ownerId = 1583;
+var minDate = "";
+var maxDate = "";
 app.post('/integrate', function (req, res) {
     payload = res.req.body;
     ownerId = payload.owner.id;
     email = "siraj.berry@idento.fr";
-    minDate = "2022-09-05";
-    maxDate = "2022-10-04";
+
     isCancelled = payload.isCancelled;
 
-    if (dateStart === '') {
-        dateStart = res.req.body.date;
+    if (minDate === '') {
+        minDate = res.req.body.date;
     }
-    dateEnd = res.req.body.date;
-    dateParam = 'between,' + dateStart + ',' + dateEnd;
+    maxDate = res.req.body.date;
     res.json(res.req.body)
 })
 
 function callback(leaveInstance) {
-    console.log("leaveInstance", leaveInstance)
     var first = Helper.transformToDateFormat(leaveInstance[0]);
     //2021-01-31
     var formatFirst = first.split('/')[2] + '-' + first.split('/')[1] + '-' + first.split('/')[0]
@@ -53,13 +52,11 @@ function callback(leaveInstance) {
     var formatLast = last.split('/')[2] + '-' + last.split('/')[1] + '-' + last.split('/')[0]
     var dateParamChild = 'between,' + formatFirst + ',' + formatLast;
 
-    console.log("dateParamChild: ", dateParamChild)
     getLuccaLeaves = LuccaService.getLeavesAPI(ownerId, dateParamChild, StaticValues.PAGING);
     getLuccaLeaves.then(response => response.json())
         .then(leaves => {
             if (leaves) {
                 luccaLeaves = leaves?.data?.items;
-                console.log("luccaLeaves: ", luccaLeaves)
                 integrator(luccaLeaves, email);
                 first = null;
                 last = null;
@@ -73,7 +70,6 @@ function callback(leaveInstance) {
 function reInitializeVariables() {
     dateStart = '';
     dateEnd = '';
-    dateParam = '';
     minDate = '';
     maxDate = '';
     dateParamChild = '';
@@ -124,17 +120,15 @@ function initialize() {
                         if(!present) acc.push([val]);
                         return acc;
                     },[]);
-                    //**************** */
-                    console.log('leaveRequestsQueue', leaveRequestsQueue);
-
-
                     leaveRequestsQueue.forEach(leaveInstance => {
+                        console.log("leaveInstance", leaveInstance);
                         // callback(leaveInstance);
                     })
+                    leaveRequestsQueue = []
                 })
         }
         else {
-            console.log('dateParam still empty', dateParam);
+            console.log('minDate,maxDate: still empty');
         }
     }, StaticValues.CALLBACK_INTERVAL);
 
@@ -193,28 +187,22 @@ function deleteLeave(dateLeave) {
 
     var luccaToFitnetDateFormat = Helper.luccaToFitnetDateConvertor(day, month, year);
     fitnetLeaveObj = FitnetManagerService.fitnetGetLeave(companyId, month, year);
-    console.log("luccaToFitnetDateFormat", luccaToFitnetDateFormat)
     fitnetLeaveObj.then(response => response.json())
         .then(leaves => {
             if (leaves) {
                 leaves.forEach(leave => {
-                    console.log("leave: ", leave)
                     if (leave.beginDate === luccaToFitnetDateFormat) {
-                        console.log("inside the if statment, id found is: ", leave.leaveId)
                         deleteLeavePromise = FitnetManagerService.fitnetDeleteLeave(leave.leaveId);
                         deleteLeavePromise.then((res) => {
-                            console.log("leave request with id " + leave.leaveId + " was deleted successfully")
                             reInitializeVariables();
                         }).catch((error) => {
                             console.log("error: ", error);
                         });
-                        console.log("inside")
                     }
                 }
                 );
             }
         })
-    console.log("outside")
 }
 
 async function setLeaves(fitnetLeaveRequest) {
@@ -230,11 +218,11 @@ async function setLeaves(fitnetLeaveRequest) {
         if (res.status == 200) {
             console.log("success this leave request was aded to fitnet", fitnetLeaveRequest)
         }
-        else if (res.status == 500) {
-            console.log("res", res)
+        else if (res.status == 400) {
+            console.log("res400", res)
         }
         else {
-            console.log("res: ", res)
+            console.log("res ELSE: ", res)
         }
     }).catch(
         (error) => {

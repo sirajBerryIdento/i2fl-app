@@ -65,38 +65,44 @@ function reInitializeVariables() {
 }
 //first function to execute
 function initialize() {
-    reInitializeVariables();
-    setInterval(() => {
-        if (!(dateParam === '')) {
-            callback();
-        }
-        else {
-            console.log('dateParam still empty', dateParam);
-        }
-    }, StaticValues.CALLBACK_INTERVAL);
+    setFunctions();
+    // var ACPT_LUCCA_LEAVES = getAcceptedLuccaLeaves();
+ 
+    // ACPT_LUCCA_LEAVES_trans = transform(ACPT_LUCCA_LEAVES)
+    // var FITNET_LEAVES = getFitnetLeaves();
+    // FITNET_LEAVES_trans = transform(FITNET_LEAVES); 
+    // identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
+    // if(!identical) {
+    //     newLeavesToAdd = _.difference(ACPT_LUCCA_LEAVES_trans,FITNET_LEAVES_trans)
+    //     oldLeavesToDelete = _.difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans)
+
+    //     deleteLeaves(oldLeavesToDelete).then(
+    //         addLeaves(newLeavesToAdd)
+    //     )
+    // }
 
 
 
 
-    var ACPT_LUCCA_LEAVES = getAcceptedLuccaLeaves();
-    ACPT_LUCCA_LEAVES_trans = transform(ACPT_LUCCA_LEAVES)
-    var FITNET_LEAVES = getFitnetLeaves();
-    FITNET_LEAVES_trans = transform(FITNET_LEAVES); 
-    identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-    if(!identical) {
-        newLeavesToAdd = _.difference(ACPT_LUCCA_LEAVES_trans,FITNET_LEAVES_trans)
-        oldLeavesToDelete = _.difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans)
 
-        deleteLeaves(oldLeavesToDelete).then(
-            addLeaves(newLeavesToAdd)
-        )
+    // reInitializeVariables();
+    // setInterval(() => {
+    //     if (!(dateParam === '')) {
+    //         callback();
+    //     }
+    //     else {
+    //         console.log('dateParam still empty', dateParam);
+    //     }
+    // }, StaticValues.CALLBACK_INTERVAL);
+}
 
-      
-    }
+async function setFunctions() {
+    const result = await getAcceptedLuccaLeaves()
+    console.log('Promise resolved: ' + result)
 }
 
 function addLeaves() {
-    index_add = 0;
+    let index_add = 0;
     while(index_add<oldLeavesToDelete.length()) {
         let tempLeave = oldLeavesToDelete[index_add];
         tempLeaveToFitnet = transformToFitnetObj(tempLeave)
@@ -108,7 +114,7 @@ function addLeaves() {
     }
 }
 function deleteLeaves(oldLeavesToDelete) { // create a promise for this to be able to use then()
-    index_delete = 0;
+    let index_delete = 0;
     while(index_delete<oldLeavesToDelete.length()) {
         let tempLeave = oldLeavesToDelete[index_delete];
         tempLeaveToFitnet = transformToFitnetObj(tempLeave)
@@ -224,54 +230,57 @@ async function setLeaves(fitnetLeaveRequest) {
 
 
 //***************/
-function getAcceptedLuccaLeaves() {
+async function getLuccaLeavesFun() {
+    let items;
     dateParamParent = 'between,' + minDate + ',' + maxDate;
-    getLuccaLeaves = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING);
-    getLuccaLeaves.then(response => response.json())
-        .then(leaves => {
-            leaves?.data?.items.forEach(leave => {
-                getIfConfirmed = LuccaService.getURL(leave?.url);
-                getIfConfirmed.then(response => response.json())
-                    .then(resp => {
-                        LuccaService.getURL(resp.data.leavePeriod.url)
-                            .then(response => response.json())
-                            .then(
-                                r => {
-                                    if (r.data.isConfirmed) {
-                                        acceptedLeaves.push(leave.id.split('-')[1])
-                                    }
-                                }
-                            )
-                    });
-            })
-        })
-        //remove duplicates
-        .then(() => {
-            acceptedLeaves = acceptedLeaves.filter((thing, index) => {
-                const _thing = JSON.stringify(thing);
-                return index === acceptedLeaves.findIndex(obj => {
-                    return JSON.stringify(obj) === _thing;
-                });
-            })
-        })
-        //arrange into consecutive requests
-        .then(() => {
-            dateformat = StaticValues.dateformat;
-            leaveRequestsQueue = acceptedLeaves.reduce(function (acc, val) {
-                var present, date = moment(val, dateformat);
-                acc.forEach(function (arr, index) {
-                    if (present) return;
-                    if (arr.indexOf(date.clone().subtract(1, 'day').format(dateformat)) > -1 || arr.indexOf(date.clone().add(1, 'day').format(dateformat)) > -1) {
-                        present = true;
-                        arr.push(val);
-                    }
-                });
-                if (!present) acc.push([val]);
-                return acc;
-            }, []);
-        })
-    return leaveRequestsQueue;
+    getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
+    getConfirmedLuccaLeaves = await getLuccaLeavesProm.then(l => {
+        items = l?.data?.items;
+    })
+    return items;
 }
+async function getAcceptedLuccaLeaves() {
+    minDate = '2022-08-01';
+    maxDate = '2022-08-31';
+    finalResult = []
+    ownerId = 1583
+    var items = getLuccaLeavesFun();
+    var tempLeaves = []
+    await items.then(re=> { 
+        tempLeaves=re;
+    });
+    finalResult = await getConfirmedLuccaLeavesFun(tempLeaves)
+    console.log('finalResult: ',finalResult);
+    return finalResult;
+}   
+
+async function getConfirmedLuccaLeavesFun(array) {
+    j=0;
+    returned = []
+    while(j<array.length) {
+        let t = array[j];
+        await LuccaService.getURL(t.url).then(response => response.json()).then(
+            res=>{
+
+//*************************************************** */
+                 LuccaService.getURL(res.data.leavePeriod.url).then(tt => tt.json()).then(
+                    respFinal=>{
+                        if(respFinal.data.isConfirmed){
+                            returned.push(array[j])
+                        }
+                    }
+                )
+
+                j++;
+            }
+        )
+    }
+
+    return returned
+}
+
+
+
 function getFitnetLeaves(){
     fitnetLeaves = [];
     FitnetManagerService.fitnetGetLeave(companyId, 7, year).then(response => response.json())

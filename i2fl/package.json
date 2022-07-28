@@ -8,6 +8,7 @@
     "rxjs": "~7.5.0",
     "socket.io": "^4.4.1",
     "tslib": "^2.3.0",
+    "underscore": "^1.13.4",
     "zone.js": "~0.11.4"
   },
   "scripts": {

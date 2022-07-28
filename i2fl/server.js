@@ -66,24 +66,6 @@ function reInitializeVariables() {
 //first function to execute
 function initialize() {
     setFunctions();
-    // var ACPT_LUCCA_LEAVES = getAcceptedLuccaLeaves();
- 
-    // ACPT_LUCCA_LEAVES_trans = transform(ACPT_LUCCA_LEAVES)
-    // var FITNET_LEAVES = getFitnetLeaves();
-    // FITNET_LEAVES_trans = transform(FITNET_LEAVES); 
-    // identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-    // if(!identical) {
-    //     newLeavesToAdd = _.difference(ACPT_LUCCA_LEAVES_trans,FITNET_LEAVES_trans)
-    //     oldLeavesToDelete = _.difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans)
-
-    //     deleteLeaves(oldLeavesToDelete).then(
-    //         addLeaves(newLeavesToAdd)
-    //     )
-    // }
-
-
-
-
 
     // reInitializeVariables();
     // setInterval(() => {
@@ -97,8 +79,22 @@ function initialize() {
 }
 
 async function setFunctions() {
-    const result = await getAcceptedLuccaLeaves()
-    console.log('Promise resolved: ' + result)
+    const ACPT_LUCCA_LEAVES = await getAcceptedLuccaLeaves()
+    console.log('Promise resolved: ', ACPT_LUCCA_LEAVES)
+
+ 
+    // ACPT_LUCCA_LEAVES_trans = transform(ACPT_LUCCA_LEAVES)
+    // var FITNET_LEAVES = getFitnetLeaves();
+    // FITNET_LEAVES_trans = transform(FITNET_LEAVES); 
+    // identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
+    // if(!identical) {
+    //     newLeavesToAdd = _.difference(ACPT_LUCCA_LEAVES_trans,FITNET_LEAVES_trans)
+    //     oldLeavesToDelete = _.difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans)
+
+    //     deleteLeaves(oldLeavesToDelete).then(
+    //         addLeaves(newLeavesToAdd)
+    //     )
+    // }
 }
 
 function addLeaves() {
@@ -182,7 +178,6 @@ function deleteLeave(dateLeave) {
         .then(leaves => {
             if (leaves) {
                 leaves.forEach(leave => {
-                    console.log("leave: ", leave)
                     if (leave.beginDate === luccaToFitnetDateFormat) {
                         console.log("inside the if statment, id found is: ", leave.leaveId)
                         deleteLeavePromise = FitnetManagerService.fitnetDeleteLeave(leave.leaveId);
@@ -230,7 +225,7 @@ async function setLeaves(fitnetLeaveRequest) {
 
 
 //***************/
-async function getLuccaLeavesFun() {
+async function getLuccaLeavesFun(minDate, maxDate) {
     let items;
     dateParamParent = 'between,' + minDate + ',' + maxDate;
     getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
@@ -244,43 +239,32 @@ async function getAcceptedLuccaLeaves() {
     maxDate = '2022-08-31';
     finalResult = []
     ownerId = 1583
-    var items = getLuccaLeavesFun();
+    var items = getLuccaLeavesFun(minDate, maxDate);
     var tempLeaves = []
     await items.then(re=> { 
         tempLeaves=re;
     });
     finalResult = await getConfirmedLuccaLeavesFun(tempLeaves)
-    console.log('finalResult: ',finalResult);
     return finalResult;
-}   
-
+}  
 async function getConfirmedLuccaLeavesFun(array) {
     j=0;
     returned = []
     while(j<array.length) {
         let t = array[j];
-        await LuccaService.getURL(t.url).then(response => response.json()).then(
-            res=>{
-
-//*************************************************** */
-                 LuccaService.getURL(res.data.leavePeriod.url).then(tt => tt.json()).then(
-                    respFinal=>{
-                        if(respFinal.data.isConfirmed){
-                            returned.push(array[j])
-                        }
-                    }
-                )
-
-                j++;
+        aURL = await LuccaService.getURL(t.url).then(response => response.json());
+        url = aURL.data.leavePeriod.url;
+        if(url) {
+            tempURL = await LuccaService.getURL(url).then(response => response.json());
+            if(tempURL.data.isConfirmed){
+                returned.push(t);
             }
-        )
+        }
+        j++;
     }
-
-    return returned
+    return returned;
 }
-
-
-
+//***************/
 function getFitnetLeaves(){
     fitnetLeaves = [];
     FitnetManagerService.fitnetGetLeave(companyId, 7, year).then(response => response.json())

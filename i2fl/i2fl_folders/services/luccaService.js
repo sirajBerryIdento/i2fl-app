@@ -21,21 +21,3 @@ function getURL(url) {
     return response;
 }
 module.exports = { getLeavesAPI, getURL };
-
-
-// leaves?.data?.items.forEach(leave => {
-//     getIfConfirmed = LuccaService.getURL(leave?.url);
-//     getIfConfirmed
-//         .then(resp => {
-//             LuccaService.getURL(resp.data.leavePeriod.url)
-                
-//                 .then(
-//                     r => {
-//                         if (r.data.isConfirmed) {
-//                             console.log('inside');
-//                             acceptedLuccaLeaves.push(leave)// the whole object
-//                         }
-//                     }
-//                 )
-//         });
-// })

@@ -40,64 +40,85 @@ app.post('/integrate', function (req, res) {
     res.json(res.req.body)
 })
 
-function callback() {
-    setTimeout(() => {
-        if (isCancelled) { // user wants to delete a vacation
-            deleteLeave(dateStart);
-        }
-        else { // user is adding a vacation
-            getLuccaLeaves = LuccaService.getLeavesAPI(ownerId, dateParam, StaticValues.PAGING);
-            getLuccaLeaves.then(response => response.json())
-                .then(leaves => {
-                    if (leaves) {
-                        luccaLeaves = leaves?.data?.items;
-                        integrator(luccaLeaves, email);
-                    }
-                })
-        }
-    }, 0);
-}
 function reInitializeVariables() {
     dateStart = '';
     dateEnd = '';
     dateParam = '';
 
 }
-//first function to execute
-function initialize() {
-    setFunctions();
 
-    // reInitializeVariables();
-    // setInterval(() => {
-    //     if (!(dateParam === '')) {
-    //         callback();
-    //     }
-    //     else {
-    //         console.log('dateParam still empty', dateParam);
-    //     }
-    // }, StaticValues.CALLBACK_INTERVAL);
-}
 
-async function setFunctions() {
+async function integrator() {
     const ACPT_LUCCA_LEAVES = await getAcceptedLuccaLeaves()
-    // ACPT_LUCCA_LEAVES_trans = transform(ACPT_LUCCA_LEAVES)
-    var FITNET_LEAVES = await getFitnetLeaves();
-    // FITNET_LEAVES_trans = transform(FITNET_LEAVES); 
-    console.log('Promise resolved: ', ACPT_LUCCA_LEAVES,FITNET_LEAVES)
+    ACPT_LUCCA_LEAVES_trans = [       
+        {
+          startDate: '16/08/2022',
+          endDate: '16/08/2022',  
+          isMidDay: false,        
+          isEndDay: false
+        },
+        {
+          startDate: '13/08/2022',
+          endDate: '13/08/2022',  
+          isMidDay: false,        
+          isEndDay: false
+        }
+      ];
+    const FITNET_LEAVES = await getFitnetLeaves();
+    FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat); 
+
+    identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
+    if(!identical) {      
+        //first we need to delete the leaves
+        let idsToDelete = []
+        oldLeavesToDelete = difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans )
+        oldLeavesToDelete.forEach(toDeleteLeave =>{
+            FITNET_LEAVES.find((o, i)=> {
+                if(
+                    (Date.parse(o.beginDate)===Date.parse(toDeleteLeave.startDate))
+                    &&
+                    (Date.parse(o.endDate)===Date.parse(toDeleteLeave.endDate))
+                    &&
+                    (o.startMidday==toDeleteLeave.isMidDay)
+                    &&
+                    (o.endMidday==toDeleteLeave.isEndDay)
+                ) 
+                {
+                    console.log(o.leaveId);
+                    idsToDelete.push(o.leaveId)
+                }
+            })
+
+            console.log("idsToDelete",idsToDelete);
+        })   
+        
 
 
 
-    // identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-    // if(!identical) {
-    //     newLeavesToAdd = _.difference(ACPT_LUCCA_LEAVES_trans,FITNET_LEAVES_trans)
-    //     oldLeavesToDelete = _.difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans)
+        //ONCE WE FINISH deleting the leaves, we start adding the new ones
+        newLeavesToAdd = JSON.stringify(difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans))
 
-    //     deleteLeaves(oldLeavesToDelete).then(
-    //         addLeaves(newLeavesToAdd)
-    //     )
-    // }
+
+        // deleteLeaves(oldLeavesToDelete).then(
+        //     addLeaves(newLeavesToAdd)
+        // )
+    }
+    else {
+        console.log("ils snt identicals");
+    }
 }
-
+var difference = function(array){
+    var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
+ 
+    var containsEquals = function(obj, target) {
+     if (obj == null) return false;
+     return _.any(obj, function(value) {
+       return _.isEqual(value, target);
+     });
+   };
+ 
+   return _.filter(array, function(value){ return ! containsEquals(rest, value); });
+ };
 function addLeaves() {
     let index_add = 0;
     while(index_add<oldLeavesToDelete.length()) {
@@ -110,60 +131,37 @@ function addLeaves() {
         )
     }
 }
+
+function transformToFitnetObj() {
+
+}
 function deleteLeaves(oldLeavesToDelete) { // create a promise for this to be able to use then()
     let index_delete = 0;
-    while(index_delete<oldLeavesToDelete.length()) {
+    while(index_delete<oldLeavesToDelete.length) {
         let tempLeave = oldLeavesToDelete[index_delete];
-        tempLeaveToFitnet = transformToFitnetObj(tempLeave)
-        FitnetManagerService.deleteLeave(tempLeaveToFitnet).then(
-            ()=>{
-                index_delete++;
-            }
-        )
+        tempId = 1;
+        tempMonth = json.parseInt(tempLeave.startDate.split("/")[1]);
+        tempYear = json.parseInt(tempLeave.startDate.split("/")[2]);
+        // FitnetManagerService.deleteLeave(tempId).then(
+        //     ()=>{
+        //         index_delete++;
+        //     }
+        // )
     }
+}
+
+//first function to execute
+function initialize() {
+    integrator();
 }
 //initial function
 initialize();
 
 app.listen(process.env.PORT || 8088, function () {
-    console.log("integrator server listening at 8088")
 })
 
 //functions
-function integrator(luccaLeaves, email) {
-    //case of half day
-    if (luccaLeaves.length == 1) {
-        halfDay = luccaLeaves[0];
-        let d = Helper.getDateFromId(halfDay);
-        halfDayDate = Helper.transformToDateFormat(d);
-        var fitnetLeaveRequest1 = new FitnetLeave(email, LeaveType, halfDayDate, halfDayDate, Helper.isAm(halfDay.id), !Helper.isAm(halfDay.id))
-        setLeaves(fitnetLeaveRequest1);
-    }
-    // case of full day
-    else if (luccaLeaves.length == 2) {
-        fullDay = luccaLeaves[0];
 
-        let fd = Helper.getDateFromId(fullDay);
-        fullDayDate = Helper.transformToDateFormat(fd);
-        var fitnetLeaveRequest2 = new FitnetLeave(email, LeaveType, fullDayDate, fullDayDate, false, false);
-        setLeaves(fitnetLeaveRequest2);
-    }
-    else if (luccaLeaves.length > 2) {
-        var begin = luccaLeaves[0];
-        var end = luccaLeaves[luccaLeaves.length - 1];
-
-        var beginDate = Helper.getDateFromId(begin);
-        beginDate = Helper.transformToDateFormat(beginDate);
-        var endDate = Helper.getDateFromId(end);
-        endDate = Helper.transformToDateFormat(endDate);
-
-        var startMidday = Helper.isHalfDay(luccaLeaves, begin.id);
-        var endMidday = Helper.isHalfDay(luccaLeaves, end.id);
-
-        var fitnetLeaveRequest3 = new FitnetLeave(email, LeaveType, beginDate, endDate, startMidday, endMidday);
-        setLeaves(fitnetLeaveRequest3);
-    }
-}
 
 function deleteLeave(dateLeave) {
     splitLeaveDate = dateLeave.split("-");
@@ -251,7 +249,7 @@ async function getAcceptedLuccaLeaves() {
 async function getConfirmedLuccaLeavesFun(array) {
     j=0;
     returned = []
-    while(j<array.length) {
+    while(array && j<array.length) {
         let t = array[j];
         aURL = await LuccaService.getURL(t.url).then(response => response.json());
         url = aURL.data.leavePeriod.url;
@@ -271,6 +269,24 @@ async function getFitnetLeaves(){
     return fitnet_Leaves;
 }
 
-function transform(array) {
-   
+async function transform(array, isType) {
+    let index = 0;
+    commonFormatArray = [];
+    while(index<array.length) {
+    let integratorFormat = {}
+    temp = array[index];   
+    if( isType==0){//Fitnet
+        integratorFormat = {
+            startDate: temp.beginDate,
+            endDate: temp.endDate,
+            isMidDay: temp.startMidday,
+            isEndDay:temp.endMidday,
+        }
+    }
+    else if(isType==1) {//lucca
+    }
+    await commonFormatArray.push(integratorFormat) 
+    index++;
+   }
+   return commonFormatArray;
 }

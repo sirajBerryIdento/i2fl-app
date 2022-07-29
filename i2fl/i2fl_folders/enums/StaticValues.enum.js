@@ -3,7 +3,9 @@ module.exports = Object.freeze({
     COMPANY_ID: 1,
     PAGING: 1,
     CALLBACK_INTERVAL: 25000,
+    IsFitnetFormat: 0,
+    IsLuccaFormat: 1,
     //temporary values   
     FITNET_ACESS_TOKEN: 'Basic c2lyYWouYmVycnlAaWRlbnRvLmZyOnRlc3QxMjMh',
-    LUCCA_ACCESS_TOKEN: 'lucca application=d21abb31-2baf-4efa-901a-d2c0773f1da0'
+    LUCCA_ACCESS_TOKEN: 'lucca application=e99d3622-d5f2-40ca-a22c-9e50a4b3539a'
 });

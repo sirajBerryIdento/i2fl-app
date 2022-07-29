@@ -74,17 +74,12 @@ async function integrator() {
         let idsToDelete = []
         oldLeavesToDelete = difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
         idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
-        console.log("idsToDelete", idsToDelete);
-
         await deleteLeaves(idsToDelete);
-        console.log("after the delete");
-        // addLeaves(newLeavesToAdd)
-
+        console.log("after the delete functions,");
+        
         //ONCE WE FINISH deleting the leaves, we start adding the new ones
-        newLeavesToAdd = JSON.stringify(difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans))
-
-
-    
+        newLeavesToAdd = difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
+        addLeaves(newLeavesToAdd)    
     }
     else {
         console.log("ils snt identicals");
@@ -122,21 +117,27 @@ var difference = function(array){
  
    return _.filter(array, function(value){ return ! containsEquals(rest, value); });
  };
-function addLeaves() {
-    let index_add = 0;
-    while(index_add<oldLeavesToDelete.length()) {
-        let tempLeave = oldLeavesToDelete[index_add];
-        tempLeaveToFitnet = transformToFitnetObj(tempLeave)
-        FitnetManagerService.setLeaves(tempLeaveToFitnet).then(
-            ()=>{
-                index_add++;
-            }
-        )
-    }
+async function addLeaves(arr) {
+   for (const luccaLeave of arr) {
+    await new Promise(r => addLuccaLeave(luccaLeave,r));
+  }
 }
-
-function transformToFitnetObj() {
-
+function addLuccaLeave(luccaLeave,r) {
+    let luccaLeaveToFitnet =  {
+        "employeeId": 1583,
+        "employee": "",
+        "email": "siraj.berry@idento.fr",
+        "typeId": StaticValues.LEAVE_TYPE,
+        "beginDate": luccaLeave.startDate,
+        "endDate": luccaLeave.endDate,
+        "startMidday": luccaLeave.isMidDay,
+        "endMidday": luccaLeave.isEndDay
+      }
+      setTimeout(() => {
+        console.log("user added successfully",luccaLeaveToFitnet);
+      }, 2000);
+    // FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet)
+    r();
 }
  async function deleteLeaves(ids) { // create a promise for this to be able to use then()
     for (const id of ids) {
@@ -145,9 +146,10 @@ function transformToFitnetObj() {
 }
 function fitnetDeleteLeave(id,r) {
     setTimeout(() => {
-        console.log("id",id);
-        r();
-    }, 4000);
+        console.log("id deleted", id);
+    // FitnetManagerService.fitnetDeleteLeave(id);
+    r();
+    }, 2000);
 }
 //first function to execute
 function initialize() {

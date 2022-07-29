@@ -23,4 +23,19 @@ async function fitnetGetLeave(companyId, month, year) {
     return response;
 }
 
-module.exports = { fitnetGetLeave, fitnetDeleteLeave };
+
+
+async function fitnetPostLeave(fitnetLeaveRequest) {
+    const response = await fetch("https://evaluation.fitnetmanager.com/FitnetManager/rest/leaves/create", {
+        method: 'POST',
+        headers: {
+            'Authorization': StaticValues.FITNET_ACESS_TOKEN,
+            'Content-type': 'application/json; charset=UTF-8',
+
+        },
+        body: JSON.stringify(fitnetLeaveRequest),
+    })
+}
+
+
+module.exports = { fitnetGetLeave, fitnetDeleteLeave, fitnetPostLeave };

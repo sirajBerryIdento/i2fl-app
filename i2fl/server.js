@@ -80,12 +80,13 @@ function initialize() {
 
 async function setFunctions() {
     const ACPT_LUCCA_LEAVES = await getAcceptedLuccaLeaves()
-    console.log('Promise resolved: ', ACPT_LUCCA_LEAVES)
-
- 
     // ACPT_LUCCA_LEAVES_trans = transform(ACPT_LUCCA_LEAVES)
-    // var FITNET_LEAVES = getFitnetLeaves();
+    var FITNET_LEAVES = await getFitnetLeaves();
     // FITNET_LEAVES_trans = transform(FITNET_LEAVES); 
+    console.log('Promise resolved: ', ACPT_LUCCA_LEAVES,FITNET_LEAVES)
+
+
+
     // identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     // if(!identical) {
     //     newLeavesToAdd = _.difference(ACPT_LUCCA_LEAVES_trans,FITNET_LEAVES_trans)
@@ -265,26 +266,11 @@ async function getConfirmedLuccaLeavesFun(array) {
     return returned;
 }
 //***************/
-function getFitnetLeaves(){
-    fitnetLeaves = [];
-    FitnetManagerService.fitnetGetLeave(companyId, 7, year).then(response => response.json())
-    .then(leaves => {fitnetLeaves = fitnetLeaves.concat(leaves)})
-
-    FitnetManagerService.fitnetGetLeave(companyId, 8, year).then(response => response.json())
-    .then(leaves => {fitnetLeaves = fitnetLeaves.concat(leaves)})
-
-    FitnetManagerService.fitnetGetLeave(companyId, 9, year).then(response => response.json())
-    .then(leaves => {fitnetLeaves = fitnetLeaves.concat(leaves)})
-
-    FitnetManagerService.fitnetGetLeave(companyId, 10, year).then(response => response.json())
-    .then(leaves => {fitnetLeaves = fitnetLeaves.concat(leaves)})
-
-    return fitnetLeaves;
+async function getFitnetLeaves(){
+    fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(StaticValues.COMPANY_ID, 8, 2022).then(response => response.json());
+    return fitnet_Leaves;
 }
 
 function transform(array) {
-    tempArray = []
-    array.forEach((leave)=>{
-        console.log(leave)
-    })
+   
 }

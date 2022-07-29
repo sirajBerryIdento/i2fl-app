@@ -68,44 +68,47 @@ async function integrator() {
     FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat); 
 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
+
     if(!identical) {      
         //first we need to delete the leaves
         let idsToDelete = []
-        oldLeavesToDelete = difference(FITNET_LEAVES_trans,ACPT_LUCCA_LEAVES_trans )
-        oldLeavesToDelete.forEach(toDeleteLeave =>{
-            FITNET_LEAVES.find((o, i)=> {
-                if(
-                    (Date.parse(o.beginDate)===Date.parse(toDeleteLeave.startDate))
-                    &&
-                    (Date.parse(o.endDate)===Date.parse(toDeleteLeave.endDate))
-                    &&
-                    (o.startMidday==toDeleteLeave.isMidDay)
-                    &&
-                    (o.endMidday==toDeleteLeave.isEndDay)
-                ) 
-                {
-                    console.log(o.leaveId);
-                    idsToDelete.push(o.leaveId)
-                }
-            })
+        oldLeavesToDelete = difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
+        idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
+        console.log("idsToDelete", idsToDelete);
 
-            console.log("idsToDelete",idsToDelete);
-        })   
-        
-
-
+        await deleteLeaves(idsToDelete);
+        console.log("after the delete");
+        // addLeaves(newLeavesToAdd)
 
         //ONCE WE FINISH deleting the leaves, we start adding the new ones
         newLeavesToAdd = JSON.stringify(difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans))
 
 
-        // deleteLeaves(oldLeavesToDelete).then(
-        //     addLeaves(newLeavesToAdd)
-        // )
+    
     }
     else {
         console.log("ils snt identicals");
     }
+}
+async function getIdsToDelete(arr,FITNET_LEAVES){
+    let tempArray = []
+    await arr.forEach(toDeleteLeave =>{
+        FITNET_LEAVES.find((o, i)=> {
+            if(
+                (Date.parse(o.beginDate)===Date.parse(toDeleteLeave.startDate))
+                &&
+                (Date.parse(o.endDate)===Date.parse(toDeleteLeave.endDate))
+                &&
+                (o.startMidday==toDeleteLeave.isMidDay)
+                &&
+                (o.endMidday==toDeleteLeave.isEndDay)
+            ) 
+            {
+                tempArray.push(o.leaveId)
+            }
+        })
+    })   
+    return tempArray;
 }
 var difference = function(array){
     var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
@@ -135,21 +138,17 @@ function addLeaves() {
 function transformToFitnetObj() {
 
 }
-function deleteLeaves(oldLeavesToDelete) { // create a promise for this to be able to use then()
-    let index_delete = 0;
-    while(index_delete<oldLeavesToDelete.length) {
-        let tempLeave = oldLeavesToDelete[index_delete];
-        tempId = 1;
-        tempMonth = json.parseInt(tempLeave.startDate.split("/")[1]);
-        tempYear = json.parseInt(tempLeave.startDate.split("/")[2]);
-        // FitnetManagerService.deleteLeave(tempId).then(
-        //     ()=>{
-        //         index_delete++;
-        //     }
-        // )
-    }
+ async function deleteLeaves(ids) { // create a promise for this to be able to use then()
+    for (const id of ids) {
+        await new Promise(r => fitnetDeleteLeave(id,r));
+      }
 }
-
+function fitnetDeleteLeave(id,r) {
+    setTimeout(() => {
+        console.log("id",id);
+        r();
+    }, 4000);
+}
 //first function to execute
 function initialize() {
     integrator();

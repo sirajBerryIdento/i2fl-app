@@ -1,5 +1,6 @@
 const StaticValues = require('./i2fl_folders/enums/StaticValues.enum')
 const LuccaService = require("./i2fl_folders/services/luccaService");
+const Helper = require("./i2fl_folders/helper/Helper")
 const FitnetManagerService = require("./i2fl_folders/services/fitnetManagerService");
 const express = require('express')
 const app = express()
@@ -8,46 +9,29 @@ var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 LeaveType = StaticValues.LEAVE_TYPE;
-const moment = require('moment');
 
 async function updateLeaves(user) {
+    var map = new Map();
     leaves = await getAcceptedLuccaLeaves(user);
+    map = leaves[0]
     src = leaves[1]
-
     src.sort(function (a, b) {
         return new Date(a) - new Date(b)
     })
+    //get leave objects
     const ACPT_LUCCA_LEAVES = src.reduce((res, date, idx, self) => {
         const rangeStart = !idx || new Date(date) - new Date(self[idx - 1]) > (864e5 / 2),
             rangeEnd = idx == self.length - 1 || new Date(self[idx + 1]) - new Date(date) > (864e5 / 2)
         if (rangeStart) res.push({ startDate: date, endDate: date })
         else if (rangeEnd) res[res.length - 1]['endDate'] = date
         return res
-    }, [])
-    // ACPT_LUCCA_LEAVES_trans = [
-    //     {
-    //         startDate: '16/08/2022',
-    //         endDate: '16/08/2022',
-    //         isMidDay: false,
-    //         isEndDay: false
-    //     },
-    //     {
-    //         startDate: '13/08/2022',
-    //         endDate: '13/08/2022',
-    //         isMidDay: false,
-    //         isEndDay: false
-    //     }
-    // ];
-
-    // console.log("ACPT_LUCCA_LEAVES", ACPT_LUCCA_LEAVES);
-    //  NOT TO BE DELETED
-
-    ACPT_LUCCA_LEAVES_trans = await transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat);
+    }, []);
+    ACPT_LUCCA_LEAVES_trans = await transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
     console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
 
 /*
     const FITNET_LEAVES = await getFitnetLeaves();
-    FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat);
+    FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat, null);
 
 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
@@ -198,7 +182,9 @@ async function getAcceptedLuccaLeaves(user) {
 async function getConfirmedLuccaLeavesFun(array) {
     let unsortedAcceptedDates = []
     j = 0;
-    returned = []
+    const map = new Map();
+    // let AM_PM = [];
+    let AM_PM = new Set();
     while (array && j < array.length) {
         let t = array[j];
         aURL = await LuccaService.getURL(t.url).then(response => response.json());
@@ -207,18 +193,29 @@ async function getConfirmedLuccaLeavesFun(array) {
             tempURL = await LuccaService.getURL(url).then(response => response.json());
             if (tempURL.data.isConfirmed) {
                 unsortedAcceptedDates.push(aURL.data.startDateTime)
-                returned.push(t);
+                
+                let tempDate = t.id.split('-')[1]
+                if(map.get(tempDate)==null){
+                    map.set(tempDate, t.id.split('-')[2])
+                }
+                else {
+                    AM_PM.add(map.get(tempDate));
+                    AM_PM.add(t.id.split('-')[2])
+                    map.set(tempDate, AM_PM)
+                }
             }
         }
         j++;
     }
-    return [returned, unsortedAcceptedDates];
+    AM_PM = []
+    return [map, unsortedAcceptedDates];
 }
 async function getFitnetLeaves() {
     fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(StaticValues.COMPANY_ID, 8, 2022).then(response => response.json());
     return fitnet_Leaves;
 }
-async function transform(array, isType) {
+async function transform(array, isType,map) {
+    console.log("map", map);
     let index = 0;
     commonFormatArray = [];
     while (index < array.length) {
@@ -233,9 +230,23 @@ async function transform(array, isType) {
             }
         }
         else if (isType == 1) {//lucca
-            let luccaDate
-            console.log("array at index", array[index]);
+            let luccaTempDate = array[index];//ex: 2022-08-08T00:00:00 
+            let luccaStartDate_luccaFormat = luccaTempDate.startDate.split('T')[0];//ex: 2022-08-08
+            let luccaEndDate_luccaFormat = luccaTempDate.startDate.split('T')[0];//ex: 2022-08-08
 
+            let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).length!=2 && map.get(luccaStartDate_luccaFormat).includes('AM'))?true:false;
+            let luccaIsEndDay = (map.get(luccaStartDate_luccaFormat).length!=2 && map.get(luccaStartDate_luccaFormat).includes('PM'))?true:false;
+
+            let luccaStartDate_fitnetFormat = Helper.transformToDateFormat(luccaStartDate_luccaFormat);//ex: 2022-08-08
+            let luccaEndDate_fitnetFormat = Helper.transformToDateFormat(luccaEndDate_luccaFormat);//ex: 2022-08-08
+            console.log("array at index", luccaTempDate);
+
+            integratorFormat = {
+                startDate: luccaStartDate_fitnetFormat,
+                endDate: luccaEndDate_fitnetFormat,
+                isMidDay: luccaIsMidDay,
+                isEndDay: luccaIsEndDay,
+            }
         }
         await commonFormatArray.push(integratorFormat)
         index++;
@@ -245,13 +256,11 @@ async function transform(array, isType) {
 
 var difference = function (array) {
     var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
-
     var containsEquals = function (obj, target) {
         if (obj == null) return false;
         return _.any(obj, function (value) {
             return _.isEqual(value, target);
         });
     };
-
     return _.filter(array, function (value) { return !containsEquals(rest, value); });
 };

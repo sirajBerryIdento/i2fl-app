@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 LeaveType = StaticValues.LEAVE_TYPE;
 const moment = require('moment');
 
-async function integrator(user) {
+async function updateLeaves(user) {
     const ACPT_LUCCA_LEAVES = await getAcceptedLuccaLeaves(user);
     // ACPT_LUCCA_LEAVES_trans = [
     //     {
@@ -116,19 +116,19 @@ function fitnetDeleteLeave(id, r) {
 async function initialize() {
     var users = await getUsers();
     for (const user of users?.data?.items) {
-        if(user.id==1583){
-            await new Promise(r => test(user, r));
+        if(user.id==1583){// only for testing 
+            await new Promise(r => integrator(user, r));
         }
     }
     console.log('finished looping');
-    // integrator();
+    // updateLeaves();
 }
 
-async function test(user, r) {
+async function integrator(user, r) {
     //just test it now on siraj: id 1583
     let userMail = await getUserMail(user.url);
     console.log("usermail ", userMail.data.login,userMail.data.mail); // to be used in the mail property 
-    await integrator(user);
+    await updateLeaves(user);
     console.log('i waited until we got out of the if statment');
     r();
 }

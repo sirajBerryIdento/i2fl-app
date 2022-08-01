@@ -6,6 +6,6 @@ module.exports = Object.freeze({
     IsFitnetFormat: 0,
     IsLuccaFormat: 1,
     //temporary values   
-    FITNET_ACESS_TOKEN: 'Basic c2lyYWouYmVycnlAaWRlbnRvLmZyOnRlc3QxMjMh',
+    FITNET_ACESS_TOKEN: 'Basic c2lyYWouYmVycnlAaWRlbnRvLmZyOnRlc3QxMjMh', // replace this by the token of the administrator
     LUCCA_ACCESS_TOKEN: 'lucca application=e99d3622-d5f2-40ca-a22c-9e50a4b3539a'
 });

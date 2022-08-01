@@ -8,9 +8,10 @@ var bodyParser = require("body-parser");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 LeaveType = StaticValues.LEAVE_TYPE;
+const moment = require('moment');
 
-async function integrator() {
-    const ACPT_LUCCA_LEAVES = await getAcceptedLuccaLeaves();
+async function integrator(user) {
+    const ACPT_LUCCA_LEAVES = await getAcceptedLuccaLeaves(user);
     // ACPT_LUCCA_LEAVES_trans = [
     //     {
     //         startDate: '16/08/2022',
@@ -25,10 +26,14 @@ async function integrator() {
     //         isEndDay: false
     //     }
     // ];
+    
     console.log("ACPT_LUCCA_LEAVES", ACPT_LUCCA_LEAVES);
+    //  NOT TO BE DELETED
+    /*
     ACPT_LUCCA_LEAVES_trans = await transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat);
     console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
-    /*
+
+    
     const FITNET_LEAVES = await getFitnetLeaves();
     FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat);
 
@@ -50,6 +55,7 @@ async function integrator() {
     else {
         console.log("ils sont identhey are identicalticals");
     }*/
+
 }
 async function getIdsToDelete(arr, FITNET_LEAVES) {
     let tempArray = []
@@ -105,9 +111,32 @@ function fitnetDeleteLeave(id, r) {
         r();
     }, 2000);
 }
+
 //first function to execute
-function initialize() {
-    integrator();
+async function initialize() {
+    var users = await getUsers();
+    for (const user of users?.data?.items) {
+        if(user.id==1583){
+            await new Promise(r => test(user, r));
+        }
+    }
+    console.log('finished looping');
+    // integrator();
+}
+
+async function test(user, r) {
+    //just test it now on siraj: id 1583
+    let userMail = await getUserMail(user.url);
+    console.log("usermail ", userMail.data.login,userMail.data.mail); // to be used in the mail property 
+    await integrator(user);
+    console.log('i waited until we got out of the if statment');
+    r();
+}
+function getUserMail(url){
+    return LuccaService.getURL(url).then(response => response.json());
+}
+function getUsers() {
+return LuccaService.getUsers().then(response => response.json());
 }
 //initial function
 initialize();
@@ -117,7 +146,7 @@ app.listen(process.env.PORT || 8088, function () {
 
 //functions
 //***************/
-async function getLuccaLeavesFun(minDate, maxDate) {
+async function getLuccaLeavesFun(minDate, maxDate, ownerId) {
     let items;
     dateParamParent = 'between,' + minDate + ',' + maxDate;
     getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
@@ -126,12 +155,12 @@ async function getLuccaLeavesFun(minDate, maxDate) {
     })
     return items;
 }
-async function getAcceptedLuccaLeaves() {
+async function getAcceptedLuccaLeaves(user) {
+    console.log("user printed in fun getAcceptedLuccaLeaves", user);
     minDate = '2022-08-01';
     maxDate = '2022-08-31';
     finalResult = []
-    ownerId = 1583
-    var items = getLuccaLeavesFun(minDate, maxDate);
+    var items = getLuccaLeavesFun(minDate, maxDate, user.id);
     var tempLeaves = []
     await items.then(re => {
         tempLeaves = re;

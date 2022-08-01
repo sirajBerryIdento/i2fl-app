@@ -20,4 +20,15 @@ function getURL(url) {
     });
     return response;
 }
-module.exports = { getLeavesAPI, getURL };
+
+
+function getUsers(url) {
+    const response = fetch('https://i-tracing.ilucca-test.net/api/v3/users/', {
+        method: 'get',
+        headers: {
+            Authorization: StaticValues.LUCCA_ACCESS_TOKEN
+        },
+    });
+    return response;
+}
+module.exports = { getLeavesAPI, getURL,getUsers };

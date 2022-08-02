@@ -194,13 +194,14 @@ async function getConfirmedLuccaLeavesFun(array) {
             if (tempURL.data.isConfirmed) {
                 unsortedAcceptedDates.push(aURL.data.startDateTime)
                 
-                let tempDate = t.id.split('-')[1]
+                let tempDate =  Helper.toLuccaDateFormate(Helper.getDateFromString(t.id,"-", 1));
+                console.log("tempDate: ",tempDate);
                 if(map.get(tempDate)==null){
-                    map.set(tempDate, t.id.split('-')[2])
+                    map.set(tempDate, Helper.getDateFromString(t.id,"-", 2))
                 }
                 else {
                     AM_PM.add(map.get(tempDate));
-                    AM_PM.add(t.id.split('-')[2])
+                    AM_PM.add(Helper.getDateFromString(t.id,"-", 2))
                     map.set(tempDate, AM_PM)
                 }
             }
@@ -231,14 +232,15 @@ async function transform(array, isType,map) {
         }
         else if (isType == 1) {//lucca
             let luccaTempDate = array[index];//ex: 2022-08-08T00:00:00 
-            let luccaStartDate_luccaFormat = luccaTempDate.startDate.split('T')[0];//ex: 2022-08-08
-            let luccaEndDate_luccaFormat = luccaTempDate.startDate.split('T')[0];//ex: 2022-08-08
-
-            let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).length!=2 && map.get(luccaStartDate_luccaFormat).includes('AM'))?true:false;
-            let luccaIsEndDay = (map.get(luccaStartDate_luccaFormat).length!=2 && map.get(luccaStartDate_luccaFormat).includes('PM'))?true:false;
+            let luccaStartDate_luccaFormat =Helper.getDateFromString(luccaTempDate.startDate, 'T', 0);//ex: 2022-08-08
+            let luccaEndDate_luccaFormat = Helper.getDateFromString(luccaTempDate.endDate, 'T', 0);//ex: 2022-08-08
+            console.log("luccaStartDate_luccaFormat",luccaStartDate_luccaFormat);
+            let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).size!=2 && map.get(luccaStartDate_luccaFormat).includes('AM'))?true:false;
+            let luccaIsEndDay = (map.get(luccaStartDate_luccaFormat).size!=2 && map.get(luccaStartDate_luccaFormat).includes('PM'))?true:false;
 
             let luccaStartDate_fitnetFormat = Helper.transformToDateFormat(luccaStartDate_luccaFormat);//ex: 2022-08-08
             let luccaEndDate_fitnetFormat = Helper.transformToDateFormat(luccaEndDate_luccaFormat);//ex: 2022-08-08
+            console.log("luccaStartDate_fitnetFormat",luccaStartDate_fitnetFormat);
             console.log("array at index", luccaTempDate);
 
             integratorFormat = {

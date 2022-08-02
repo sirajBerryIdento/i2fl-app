@@ -1,8 +1,13 @@
-function getDateFromId(data) {
-    return data.id.split("-")[1];
+function getDateFromString(data,split_by, index) {
+    return data.split(split_by)[index];
 }
-function transformToDateFormat(date) { //returns this format: dd-MM-yyyy
-    return date.substring(6, 8) + "/" + date.substring(4, 6) + "/" + date.substring(0, 4);
+function transformToDateFormat(date) {// 2022-09-06 to 06-09-2022(dd-mm-yyyy)
+    // return date.substring(6, 8) + "/" + date.substring(4, 6) + "/" + date.substring(0, 4);
+    let date_splitted = date.split('-');
+    return date_splitted[2]+'-'+date_splitted[1]+date_splitted[0];
+}
+function toLuccaDateFormate(date){ //from 20220906 to result: 2022-09-06
+    return date.substring(0, 4) + "-" + date.substring(4, 6) + "-" + date.substring(6, 8); 
 }
 function isHalfDay(luccaLeaves, id) {
     var instanceId = id.split("-");
@@ -30,4 +35,4 @@ function isAm (id) {
     return r==='AM' ;
 }
 
-module.exports = { getDateFromId, transformToDateFormat,isHalfDay, luccaToFitnetDateConvertor, isAm};
+module.exports = { getDateFromString, transformToDateFormat,isHalfDay, luccaToFitnetDateConvertor, isAm, toLuccaDateFormate};

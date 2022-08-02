@@ -28,14 +28,15 @@ async function updateLeaves(user) {
     }, []);
     ACPT_LUCCA_LEAVES_trans = await transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
     console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
+    console.log("lucca leaves delivered, check fitnet leaves now");
 
-/*
     const FITNET_LEAVES = await getFitnetLeaves();
     FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat, null);
 
+    console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-
+    /*
     if (!identical) {
         //first we need to delete the leaves
         let idsToDelete = []
@@ -50,8 +51,8 @@ async function updateLeaves(user) {
     }
     else {
         console.log("ils sont identhey are identicalticals");
-    }
-*/
+    }*/
+
 }
 
 
@@ -238,8 +239,8 @@ async function transform(array, isType,map) {
             let luccaEndDate_fitnetFormat = Helper.transformToDateFormat(luccaEndDate_luccaFormat);//ex: 2022-08-08
 
             integratorFormat = {
-                startDate: luccaStartDate_fitnetFormat,
-                endDate: luccaEndDate_fitnetFormat,
+                startDate: Helper.luccaToFitnetDateConvertor(luccaStartDate_fitnetFormat),
+                endDate: Helper.luccaToFitnetDateConvertor(luccaEndDate_fitnetFormat),
                 isMidDay: luccaIsMidDay,
                 isEndDay: luccaIsEndDay,
             }

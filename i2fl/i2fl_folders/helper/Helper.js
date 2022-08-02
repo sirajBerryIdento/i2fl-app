@@ -8,22 +8,6 @@ function transformToDateFormat(date) {// 2022-09-06 to 06-09-2022(dd-mm-yyyy)
 function toLuccaDateFormate(date){ //from 20220906 to result: 2022-09-06
     return date.substring(0, 4) + "-" + date.substring(4, 6) + "-" + date.substring(6, 8); 
 }
-function isHalfDay(luccaLeaves, id) {
-    var instanceId = id.split("-");
-    instanceId = instanceId[0] + "-" + instanceId[1];
-    var counter = 0;
-    luccaLeaves.forEach((leave) => {
-        if (leave.id.includes(instanceId)) {
-            counter++
-        }
-    });
-
-    if (counter == 2) { //PM and AM
-        return false;
-    }
-    counter = 0;
-    return true;
-}
 //yyyy-MM-dd to dd/MM/yyyy
 function luccaToFitnetDateConvertor(date) {
     let day = parseInt (getDateFromString(date, '-',0)) 
@@ -32,4 +16,4 @@ function luccaToFitnetDateConvertor(date) {
     return ((day > 9) ? day : '0' + day) + "/" + ((month > 9) ? month : '0' + month) + "/" + year;
 }
 
-module.exports = { getDateFromString, transformToDateFormat,isHalfDay, luccaToFitnetDateConvertor, toLuccaDateFormate};
+module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate};

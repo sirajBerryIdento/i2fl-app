@@ -1,7 +1,6 @@
 const StaticValues = require('./i2fl_folders/enums/StaticValues.enum')
 const LuccaService = require("./i2fl_folders/services/luccaService");
-const Helper = require("./i2fl_folders/helper/Helper")
-const FitnetManagerService = require("./i2fl_folders/services/fitnetManagerService");
+const MainFunctions = require("./i2fl_folders/main_functions/MainFunctions");
 const express = require('express')
 const app = express()
 var _ = require('underscore')._;
@@ -10,9 +9,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 LeaveType = StaticValues.LEAVE_TYPE;
 
+
+
+
 async function updateLeaves(user) {
     var map = new Map();
-    leaves = await getAcceptedLuccaLeaves(user);
+    leaves = await MainFunctions.getAcceptedLuccaLeaves(user);
     map = leaves[0]
     src = leaves[1]
     src.sort(function (a, b) {
@@ -26,66 +28,69 @@ async function updateLeaves(user) {
         else if (rangeEnd) res[res.length - 1]['endDate'] = date
         return res
     }, []);
-    ACPT_LUCCA_LEAVES_trans = await transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
-    console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
+    ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
     console.log("lucca leaves delivered, check fitnet leaves now");
-
-    const FITNET_LEAVES = await getFitnetLeaves();
-    FITNET_LEAVES_trans = await transform(FITNET_LEAVES, StaticValues.IsFitnetFormat, null);
-
-    console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
+    const FITNET_LEAVES = await MainFunctions.getFitnetLeaves();
+    FITNET_LEAVES_trans = await MainFunctions.transform(FITNET_LEAVES, StaticValues.IsFitnetFormat, null);
+    console.log("fitnet leaves delivered, check if they are identical now");
 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-    /*
+
     if (!identical) {
         //first we need to delete the leaves
         let idsToDelete = []
-        oldLeavesToDelete = difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
+        //if the leaves in fitnet are no longer in lucca, this means that we need to deltet them from lucca
+        oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
         idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
+        console.log("leaves to delete from fitnet: ", idsToDelete);
         await deleteLeaves(idsToDelete);
         console.log("after the delete functions,");
 
         //ONCE WE FINISH deleting the leaves, we start adding the new ones
-        newLeavesToAdd = difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
-        addLeaves(newLeavesToAdd)
+        //if lucca leaves are not in fitnet leaves, this means that we need to add them to fitnet
+        newLeavesToAdd = MainFunctions.difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
+        console.log("leaves to add to fitnet: ", newLeavesToAdd);
+        addLeaves(newLeavesToAdd, user)
+        console.log('you should see this after we finish updating the leave requests for each user');
     }
     else {
-        console.log("ils sont identhey are identicalticals");
-    }*/
+        console.log("No changes, the user did not update his vacations yet.");
+    }
 
 }
 
 
-async function getIdsToDelete(arr, FITNET_LEAVES) {
+async function getIdsToDelete(arr, fitnetLeaves) {
     let tempArray = []
-    await arr.forEach(toDeleteLeave => {
-        FITNET_LEAVES.find((o, i) => {
+    for (const toDeleteLeave of arr) {
+        for (const obj of fitnetLeaves) {
             if (
-                (Date.parse(o.beginDate) === Date.parse(toDeleteLeave.startDate))
+                (Date.parse(obj.beginDate) === Date.parse(toDeleteLeave.startDate))
                 &&
-                (Date.parse(o.endDate) === Date.parse(toDeleteLeave.endDate))
+                (Date.parse(obj.endDate) === Date.parse(toDeleteLeave.endDate))
                 &&
-                (o.startMidday == toDeleteLeave.isMidDay)
+                (obj.startMidday === toDeleteLeave.isMidDay)
                 &&
-                (o.endMidday == toDeleteLeave.isEndDay)
+                (obj.endMidday === toDeleteLeave.isEndDay)
             ) {
                 tempArray.push(o.leaveId)
             }
-        })
-    })
+        }
+
+    }
     return tempArray;
 }
 
-async function addLeaves(arr) {
+async function addLeaves(arr, user) {
     for (const luccaLeave of arr) {
-        await new Promise(r => addLuccaLeave(luccaLeave, r));
+        await new Promise(r => addLuccaLeave(luccaLeave, user, r));
     }
 }
-function addLuccaLeave(luccaLeave, r) {
+function addLuccaLeave(luccaLeave, user, r) {
     let luccaLeaveToFitnet = {
-        "employeeId": 1583,
+        "employeeId": user.id, // check this
         "employee": "",
-        "email": "siraj.berry@idento.fr",
+        "email": user.data.login,
         "typeId": StaticValues.LEAVE_TYPE,
         "beginDate": luccaLeave.startDate,
         "endDate": luccaLeave.endDate,
@@ -98,7 +103,7 @@ function addLuccaLeave(luccaLeave, r) {
     // FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet)
     r();
 }
-async function deleteLeaves(ids) { // create a promise for this to be able to use then()
+async function deleteLeaves(ids) {
     for (const id of ids) {
         await new Promise(r => fitnetDeleteLeave(id, r));
     }
@@ -115,25 +120,12 @@ function fitnetDeleteLeave(id, r) {
 async function initialize() {
     var users = await getUsers();
     for (const user of users?.data?.items) {
-        if (user.id == 1583) {// only for testing 
+        if (user.id == 1583) {// is statment is only for testing: only for testing 
             await new Promise(r => integrator(user, r));
         }
     }
     console.log('finished looping');
     // updateLeaves();
-
-
-    // const src = ["2022-08-08T12:00:00","2022-08-08T00:00:00","2022-08-09T12:00:00","2022-08-09T00:00:00","2022-08-10T12:00:00","2022-08-10T00:00:00", "2022-08-12T00:00:00"]
-    const src = [
-        "2022-08-08T12:00:00",
-        "2022-08-08T00:00:00",
-        "2022-08-09T12:00:00",
-        "2022-08-09T00:00:00",
-        "2022-08-10T12:00:00",
-        "2022-08-10T00:00:00",
-        "2022-08-12T00:00:00"
-    ]
-    // create a map to get the isMidDay, is endDay
 }
 
 async function integrator(user, r) {
@@ -141,7 +133,7 @@ async function integrator(user, r) {
     //just test it now on siraj: id 1583
     let userMail = await getUserMail(user.url);
     console.log("usermail ", userMail.data.login, userMail.data.mail); // to be used in the mail property 
-    await updateLeaves(user);
+    await updateLeaves(userMail);
     console.log('i waited until we got out of the if statment');
     r();
 }
@@ -158,106 +150,4 @@ app.listen(process.env.PORT || 8088, function () {
 })
 
 //functions
-//***************/
-async function getLuccaLeavesFun(minDate, maxDate, ownerId) {
-    let items;
-    dateParamParent = 'between,' + minDate + ',' + maxDate;
-    getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
-    getConfirmedLuccaLeaves = await getLuccaLeavesProm.then(l => {
-        items = l?.data?.items;
-    })
-    return items;
-}
-async function getAcceptedLuccaLeaves(user) {
-    minDate = '2022-08-01';
-    maxDate = '2022-09-30';
-    var items = getLuccaLeavesFun(minDate, maxDate, user.id);
-    var tempLeaves = []
-    await items.then(re => {
-        tempLeaves = re;
-    });
-    finalResultArray = await getConfirmedLuccaLeavesFun(tempLeaves)
-    return [finalResultArray[0], finalResultArray[1]];
-}
-async function getConfirmedLuccaLeavesFun(array) {
-    let unsortedAcceptedDates = []
-    j = 0;
-    const map = new Map();
-    // let AM_PM = [];
-    let AM_PM = new Set();
-    while (array && j < array.length) {
-        let t = array[j];
-        aURL = await LuccaService.getURL(t.url).then(response => response.json());
-        url = aURL.data.leavePeriod.url;
-        if (url) {
-            tempURL = await LuccaService.getURL(url).then(response => response.json());
-            if (tempURL.data.isConfirmed) {
-                unsortedAcceptedDates.push(aURL.data.startDateTime)
-                
-                let tempDate =  Helper.toLuccaDateFormate(Helper.getDateFromString(t.id,"-", 1));
-                if(map.get(tempDate)==null){
-                    map.set(tempDate, Helper.getDateFromString(t.id,"-", 2))
-                }
-                else {
-                    AM_PM.add(map.get(tempDate));
-                    AM_PM.add(Helper.getDateFromString(t.id,"-", 2))
-                    map.set(tempDate, AM_PM)
-                }
-            }
-        }
-        j++;
-    }
-    AM_PM = []
-    return [map, unsortedAcceptedDates];
-}
-async function getFitnetLeaves() {
-    fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(StaticValues.COMPANY_ID, 8, 2022).then(response => response.json());
-    return fitnet_Leaves;
-}
-async function transform(array, isType,map) {
-    let index = 0;
-    commonFormatArray = [];
-    while (index < array.length) {
-        let integratorFormat = {}
-        temp = array[index];
-        if (isType == 0) {//Fitnet
-            integratorFormat = {
-                startDate: temp.beginDate,
-                endDate: temp.endDate,
-                isMidDay: temp.startMidday,
-                isEndDay: temp.endMidday,
-            }
-        }
-        else if (isType == 1) {//lucca
-            let luccaTempDate = array[index];//ex: 2022-08-08T00:00:00 
-            let luccaStartDate_luccaFormat =Helper.getDateFromString(luccaTempDate.startDate, 'T', 0);//ex: 2022-08-08
-            let luccaEndDate_luccaFormat = Helper.getDateFromString(luccaTempDate.endDate, 'T', 0);//ex: 2022-08-08
-            let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).size!=2 && map.get(luccaStartDate_luccaFormat).includes('AM'))?true:false;
-            let luccaIsEndDay = (map.get(luccaStartDate_luccaFormat).size!=2 && map.get(luccaStartDate_luccaFormat).includes('PM'))?true:false;
-
-            let luccaStartDate_fitnetFormat = Helper.transformToDateFormat(luccaStartDate_luccaFormat);//ex: 2022-08-08
-            let luccaEndDate_fitnetFormat = Helper.transformToDateFormat(luccaEndDate_luccaFormat);//ex: 2022-08-08
-
-            integratorFormat = {
-                startDate: Helper.luccaToFitnetDateConvertor(luccaStartDate_fitnetFormat),
-                endDate: Helper.luccaToFitnetDateConvertor(luccaEndDate_fitnetFormat),
-                isMidDay: luccaIsMidDay,
-                isEndDay: luccaIsEndDay,
-            }
-        }
-        await commonFormatArray.push(integratorFormat)
-        index++;
-    }
-    return commonFormatArray;
-}
-
-var difference = function (array) {
-    var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
-    var containsEquals = function (obj, target) {
-        if (obj == null) return false;
-        return _.any(obj, function (value) {
-            return _.isEqual(value, target);
-        });
-    };
-    return _.filter(array, function (value) { return !containsEquals(rest, value); });
-};
+//***********************************************************************************************************************/

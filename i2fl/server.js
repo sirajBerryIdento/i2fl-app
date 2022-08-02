@@ -168,7 +168,6 @@ async function getLuccaLeavesFun(minDate, maxDate, ownerId) {
     return items;
 }
 async function getAcceptedLuccaLeaves(user) {
-    console.log("user printed in fun getAcceptedLuccaLeaves", user);
     minDate = '2022-08-01';
     maxDate = '2022-09-30';
     var items = getLuccaLeavesFun(minDate, maxDate, user.id);
@@ -195,7 +194,6 @@ async function getConfirmedLuccaLeavesFun(array) {
                 unsortedAcceptedDates.push(aURL.data.startDateTime)
                 
                 let tempDate =  Helper.toLuccaDateFormate(Helper.getDateFromString(t.id,"-", 1));
-                console.log("tempDate: ",tempDate);
                 if(map.get(tempDate)==null){
                     map.set(tempDate, Helper.getDateFromString(t.id,"-", 2))
                 }
@@ -216,7 +214,6 @@ async function getFitnetLeaves() {
     return fitnet_Leaves;
 }
 async function transform(array, isType,map) {
-    console.log("map", map);
     let index = 0;
     commonFormatArray = [];
     while (index < array.length) {
@@ -234,14 +231,11 @@ async function transform(array, isType,map) {
             let luccaTempDate = array[index];//ex: 2022-08-08T00:00:00 
             let luccaStartDate_luccaFormat =Helper.getDateFromString(luccaTempDate.startDate, 'T', 0);//ex: 2022-08-08
             let luccaEndDate_luccaFormat = Helper.getDateFromString(luccaTempDate.endDate, 'T', 0);//ex: 2022-08-08
-            console.log("luccaStartDate_luccaFormat",luccaStartDate_luccaFormat);
             let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).size!=2 && map.get(luccaStartDate_luccaFormat).includes('AM'))?true:false;
             let luccaIsEndDay = (map.get(luccaStartDate_luccaFormat).size!=2 && map.get(luccaStartDate_luccaFormat).includes('PM'))?true:false;
 
             let luccaStartDate_fitnetFormat = Helper.transformToDateFormat(luccaStartDate_luccaFormat);//ex: 2022-08-08
             let luccaEndDate_fitnetFormat = Helper.transformToDateFormat(luccaEndDate_luccaFormat);//ex: 2022-08-08
-            console.log("luccaStartDate_fitnetFormat",luccaStartDate_fitnetFormat);
-            console.log("array at index", luccaTempDate);
 
             integratorFormat = {
                 startDate: luccaStartDate_fitnetFormat,

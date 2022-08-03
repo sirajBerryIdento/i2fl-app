@@ -17,10 +17,13 @@ async function updateLeaves(user) {
     leaves = await MainFunctions.getAcceptedLuccaLeaves(user);
     map = leaves[0]
     src = leaves[1]
+    // *****make this a function****
     src.sort(function (a, b) {
         return new Date(a) - new Date(b)
     })
     //get leave objects
+
+    // *****make this a function****
     const ACPT_LUCCA_LEAVES = src.reduce((res, date, idx, self) => {
         const rangeStart = !idx || new Date(date) - new Date(self[idx - 1]) > (864e5 / 2),
             rangeEnd = idx == self.length - 1 || new Date(self[idx + 1]) - new Date(date) > (864e5 / 2)

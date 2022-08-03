@@ -3,6 +3,8 @@ const LuccaService = require("./i2fl_folders/services/luccaService");
 const MainFunctions = require("./i2fl_folders/main_functions/MainFunctions");
 const express = require('express')
 const app = express()
+const schedule = require('node-schedule');
+
 var _ = require('underscore')._;
 var bodyParser = require("body-parser");
 app.use(bodyParser.json());
@@ -121,6 +123,7 @@ function fitnetDeleteLeave(id, r) {
 
 //first function to execute
 async function initialize() {
+    /*
     var users = await getUsers();
     for (const user of users?.data?.items) {
         if (user.id == 1583) {// is statment is only for testing: only for testing 
@@ -128,6 +131,21 @@ async function initialize() {
         }
     }
     console.log('finished looping');
+    */
+    var CronJob = require('cron').CronJob;
+    var job = new CronJob('*/1 * * * * *', function() {//it runs eveyday from monday to friday at 12 AM
+      /*
+       * Runs every day
+       * at 12:00:00 AM.
+       */
+      console.log("run every 1 sec");
+      }, function () {
+        console.log('done!');
+        /* This function is executed when the job stops */
+      },
+      true /* Start the job right now */
+    );
+    
     // updateLeaves();
 }
 

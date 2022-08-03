@@ -1,6 +1,7 @@
 const StaticValues = require('./i2fl_folders/enums/StaticValues.enum')
 const LuccaService = require("./i2fl_folders/services/luccaService");
 const MainFunctions = require("./i2fl_folders/main_functions/MainFunctions");
+const Helper = require("./i2fl_folders/helper/Helper");
 const express = require('express')
 const app = express()
 const schedule = require('node-schedule');
@@ -14,9 +15,9 @@ LeaveType = StaticValues.LEAVE_TYPE;
 
 
 
-async function updateLeaves(user) {
+async function updateLeaves(user, minDate, maxDate) {
     var map = new Map();
-    leaves = await MainFunctions.getAcceptedLuccaLeaves(user);
+    leaves = await MainFunctions.getAcceptedLuccaLeaves(user, minDate, maxDate);
     map = leaves[0]
     src = leaves[1]
     // *****make this a function****
@@ -123,6 +124,7 @@ function fitnetDeleteLeave(id, r) {
 
 //first function to execute
 async function initialize() {
+   
     /*
     var users = await getUsers();
     for (const user of users?.data?.items) {
@@ -150,11 +152,13 @@ async function initialize() {
 }
 
 async function integrator(user, r) {
+    minDate = Helper.getTodaysDate();
+    maxDate = Helper.getDateInFourMonths();
 
     //just test it now on siraj: id 1583
     let userMail = await getUserMail(user.url);
     console.log("usermail ", userMail.data.login, userMail.data.mail); // to be used in the mail property 
-    await updateLeaves(userMail);
+    await updateLeaves(userMail, minDate, maxDate);
     console.log('i waited until we got out of the if statment');
     r();
 }

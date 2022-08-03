@@ -22,8 +22,15 @@ function getTodaysDate() {
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     var yyyy = today.getFullYear();
 
-    today = mm + '/' + dd + '/' + yyyy;
+    today = yyyy +'-'+ mm + '-' + dd;
     return today;
 }
 
-module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, getTodaysDate};
+function getDateInFourMonths() {
+    var date_in_4_months = new Date();
+    date_in_4_months.setMonth(date_in_4_months.getMonth() + 4);
+    date_in_4_months = Helper.getDateFromString(JSON.stringify(date_in_4_months), 'T',0)
+    return date_in_4_months.substring(1);
+}
+
+module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, getTodaysDate, getDateInFourMonths};

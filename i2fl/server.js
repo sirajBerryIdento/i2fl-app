@@ -135,7 +135,7 @@ async function initialize() {
     console.log('finished looping');
     */
     var CronJob = require('cron').CronJob;
-    var job = new CronJob('*/1 * * * * *', function() {//it runs eveyday from monday to friday at 12 AM
+    var job = new CronJob(StaticValues.scheduled_date, function() {//it runs eveyday from monday to friday at 12 AM
       /*
        * Runs every day
        * at 12:00:00 AM.

@@ -132,7 +132,7 @@ async function initialize() {
             await new Promise(r => integrator(user, r));
         }
     }
-    console.log('finished looping');
+    console.log('finished loopingggg');
     */
     var CronJob = require('cron').CronJob;
     var job = new CronJob(StaticValues.scheduled_date, function() {//it runs eveyday from monday to friday at 12 AM

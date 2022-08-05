@@ -5,6 +5,7 @@ const Helper = require("./i2fl_folders/helper/Helper");
 const express = require('express')
 const app = express()
 const cron = require("node-cron");
+const FitnetManagerService = require("./i2fl_folders/services/fitnetManagerService");
 
 var _ = require('underscore')._;
 var bodyParser = require("body-parser");
@@ -15,9 +16,9 @@ LeaveType = StaticValues.LEAVE_TYPE;
 
 
 
-async function updateLeaves(user, minDate, maxDate) {
+async function updateLeaves(user, minDate, maxDate, month, year) {
     var map = new Map();
-    leaves = await MainFunctions.getAcceptedLuccaLeaves(user, minDate, maxDate);
+    leaves = await MainFunctions.getAcceptedLuccaLeaves(user, minDate, maxDate, month, year);
     map = leaves[0]
     src = leaves[1]
     // *****make this a function****
@@ -35,12 +36,14 @@ async function updateLeaves(user, minDate, maxDate) {
         return res
     }, []);
     ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
-    console.log("lucca leaves delivered, check fitnet leaves now");
-    const FITNET_LEAVES = await MainFunctions.getFitnetLeaves();
+    const FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);
     FITNET_LEAVES_trans = await MainFunctions.transform(FITNET_LEAVES, StaticValues.IsFitnetFormat, null);
-    console.log("fitnet leaves delivered, check if they are identical now");
 
+    console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
+    console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
+    
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
+    console.log("identical",identical);
 
     if (!identical) {
         //first we need to delete the leaves
@@ -62,7 +65,6 @@ async function updateLeaves(user, minDate, maxDate) {
     else {
         console.log("No changes, the user did not update his vacations yet.");
     }
-
 }
 
 
@@ -103,10 +105,10 @@ function addLuccaLeave(luccaLeave, user, r) {
         "startMidday": luccaLeave.isMidDay,
         "endMidday": luccaLeave.isEndDay
     }
-    setTimeout(() => {
-        console.log("user added successfully", luccaLeaveToFitnet);
-    }, 2000);
-    // FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet)
+    // setTimeout(() => {
+    //     console.log("user added successfully", luccaLeaveToFitnet);
+    // }, 2000);
+    FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet)
     r();
 }
 async function deleteLeaves(ids) {
@@ -117,7 +119,7 @@ async function deleteLeaves(ids) {
 function fitnetDeleteLeave(id, r) {
     setTimeout(() => {
         console.log("id deleted", id);
-        // FitnetManagerService.fitnetDeleteLeave(id);
+        FitnetManagerService.fitnetDeleteLeave(id);
         r();
     }, 2000);
 }
@@ -143,11 +145,12 @@ async function initialize() {
 async function integrator(user, r) {
     minDate = Helper.getTodaysDate();
     maxDate = Helper.getDateInFourMonths();
-
+    month = Helper.getMonth();
+    year = Helper.getYear();
     //just test it now on siraj: id 1583
     let userMail = await getUserMail(user.url);
     console.log("usermail ", userMail.data.login, userMail.data.mail); // to be used in the mail property 
-    await updateLeaves(userMail, minDate, maxDate);
+    await updateLeaves(userMail, minDate, maxDate, month, year);
     console.log('i waited until we got out of the if statment');
     r();
 }

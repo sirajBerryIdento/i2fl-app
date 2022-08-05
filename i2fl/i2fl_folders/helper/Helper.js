@@ -25,12 +25,24 @@ function getTodaysDate() {
     today = yyyy +'-'+ mm + '-' + dd;
     return today;
 }
+function getMonth(){
+    var today = new Date();
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    return mm;
+}
+function getYear () {
+    var today = new Date();
 
+    var yyyy = today.getFullYear();
+    return yyyy;
+}
 function getDateInFourMonths() {
     var date_in_4_months = new Date();
     date_in_4_months.setMonth(date_in_4_months.getMonth() + 4);
     date_in_4_months = getDateFromString(JSON.stringify(date_in_4_months), 'T',0)
     return date_in_4_months.substring(1);
 }
-
-module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, getTodaysDate, getDateInFourMonths};
+function lastdayOfTheMonth(y,m){
+    return  new Date(y, m +1, 0).getDate();
+    }
+module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, getTodaysDate, getDateInFourMonths, lastdayOfTheMonth, getMonth, getYear};

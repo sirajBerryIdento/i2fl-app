@@ -5,9 +5,12 @@ const StaticValues = require('../enums/StaticValues.enum')
 
 var _ = require('underscore')._;
 
-async function getLuccaLeavesFun(minDate, maxDate, ownerId) {
+async function getLuccaLeavesFun(minDate, maxDate, ownerId, month, year) {
     let items;
-    dateParamParent = 'between,' + minDate + ',' + maxDate;
+    endOfMonth = new Date(year, month, 0).getDate();
+    reshapedendOfMonth= ((endOfMonth > 9) ? endOfMonth : '0' + endOfMonth)
+    dateParamParent = "until,"+ year+'-'+month+'-'+endOfMonth;// '2021-01-31'
+    // dateParamParent = 'between,' + minDate + ',' + maxDate;
     getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
     getConfirmedLuccaLeaves = await getLuccaLeavesProm.then(l => {
         items = l?.data?.items;
@@ -16,8 +19,8 @@ async function getLuccaLeavesFun(minDate, maxDate, ownerId) {
 }
 
 
-async function getAcceptedLuccaLeaves(user, minDate, maxDate) {
-    var items = getLuccaLeavesFun(minDate, maxDate, user.data.id);
+async function getAcceptedLuccaLeaves(user, minDate, maxDate, month, year) {
+    var items = getLuccaLeavesFun(minDate, maxDate, user.data.id, month, year);
     var tempLeaves = []
     await items.then(re => {
         tempLeaves = re;
@@ -55,8 +58,8 @@ async function getConfirmedLuccaLeavesFun(array) {
     AM_PM = []
     return [map, unsortedAcceptedDates];
 }
-async function getFitnetLeaves() {
-    fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(StaticValues.COMPANY_ID, 8, 2022).then(response => response.json());
+async function getFitnetLeaves(month, year) {
+    fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(StaticValues.COMPANY_ID, month, year).then(response => response.json());
     return fitnet_Leaves;
 }
 async function transform(array, isType, map) {

@@ -47,7 +47,6 @@ async function updateLeaves(user, minDate, maxDate) {
         let idsToDelete = []
         //if the leaves in fitnet are no longer in lucca, this means that we need to deltet them from lucca
         oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
-        console.log("oldLeavesToDelete",oldLeavesToDelete);
         idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
         console.log("leaves to delete from fitnet: ", idsToDelete);
         await deleteLeaves(idsToDelete);
@@ -57,7 +56,7 @@ async function updateLeaves(user, minDate, maxDate) {
         //if lucca leaves are not in fitnet leaves, this means that we need to add them to fitnet
         newLeavesToAdd = MainFunctions.difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
         console.log("leaves to add to fitnet: ", newLeavesToAdd);
-        addLeaves(newLeavesToAdd, user)
+        await addLeaves(newLeavesToAdd, user)
         console.log('you should see this after we finish updating the leave requests for each user');
     }
     else {
@@ -95,7 +94,7 @@ async function addLeaves(arr, user) {
 }
 function addLuccaLeave(luccaLeave, user, r) {
     let luccaLeaveToFitnet = {
-        "employeeId": user.id, // check this
+        "employeeId": user.data.id,
         "employee": "",
         "email": user.data.login,
         "typeId": StaticValues.LEAVE_TYPE,
@@ -132,7 +131,7 @@ async function initialize() {
             await new Promise(r => integrator(user, r));
         }
     }
-    console.log('finished loopingggg');
+    console.log('finished looping!');
     
    
     const cron = require('node-cron');

@@ -17,8 +17,7 @@ async function getLuccaLeavesFun(minDate, maxDate, ownerId) {
 
 
 async function getAcceptedLuccaLeaves(user, minDate, maxDate) {
-    // minDate format: '2022-08-01';
-    var items = getLuccaLeavesFun(minDate, maxDate, user.id);
+    var items = getLuccaLeavesFun(minDate, maxDate, user.data.id);
     var tempLeaves = []
     await items.then(re => {
         tempLeaves = re;

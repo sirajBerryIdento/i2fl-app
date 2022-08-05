@@ -29,7 +29,7 @@ function getTodaysDate() {
 function getDateInFourMonths() {
     var date_in_4_months = new Date();
     date_in_4_months.setMonth(date_in_4_months.getMonth() + 4);
-    date_in_4_months = Helper.getDateFromString(JSON.stringify(date_in_4_months), 'T',0)
+    date_in_4_months = getDateFromString(JSON.stringify(date_in_4_months), 'T',0)
     return date_in_4_months.substring(1);
 }
 

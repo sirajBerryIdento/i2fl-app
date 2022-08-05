@@ -47,6 +47,7 @@ async function updateLeaves(user, minDate, maxDate) {
         let idsToDelete = []
         //if the leaves in fitnet are no longer in lucca, this means that we need to deltet them from lucca
         oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
+        console.log("oldLeavesToDelete",oldLeavesToDelete);
         idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
         console.log("leaves to delete from fitnet: ", idsToDelete);
         await deleteLeaves(idsToDelete);
@@ -71,15 +72,15 @@ async function getIdsToDelete(arr, fitnetLeaves) {
     for (const toDeleteLeave of arr) {
         for (const obj of fitnetLeaves) {
             if (
-                (Date.parse(obj.beginDate) === Date.parse(toDeleteLeave.startDate))
+                (obj.beginDate === toDeleteLeave.startDate )
                 &&
-                (Date.parse(obj.endDate) === Date.parse(toDeleteLeave.endDate))
+                ( obj.endDate === toDeleteLeave.endDate)
                 &&
                 (obj.startMidday === toDeleteLeave.isMidDay)
                 &&
                 (obj.endMidday === toDeleteLeave.isEndDay)
             ) {
-                tempArray.push(o.leaveId)
+                tempArray.push(obj.leaveId)
             }
         }
 
@@ -124,7 +125,7 @@ function fitnetDeleteLeave(id, r) {
 
 //first function to execute
 async function initialize() {
-    /*
+    
     var users = await getUsers();
     for (const user of users?.data?.items) {
         if (user.id == 1583) {// is statment is only for testing: only for testing 
@@ -132,13 +133,12 @@ async function initialize() {
         }
     }
     console.log('finished loopingggg');
-    */
+    
    
     const cron = require('node-cron');
     cron.schedule(StaticValues.scheduled_date, () => {
         console.log('Hello World');
     });
-    // updateLeaves();
 }
 
 async function integrator(user, r) {

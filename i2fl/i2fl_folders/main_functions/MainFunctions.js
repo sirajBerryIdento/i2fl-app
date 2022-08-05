@@ -1,5 +1,8 @@
 const Helper = require("../helper/Helper")
 const FitnetManagerService = require("../services/fitnetManagerService");
+const LuccaService = require("../services/luccaService");
+const StaticValues = require('../enums/StaticValues.enum')
+
 var _ = require('underscore')._;
 
 async function getLuccaLeavesFun(minDate, maxDate, ownerId) {

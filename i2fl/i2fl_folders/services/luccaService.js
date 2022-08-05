@@ -22,7 +22,7 @@ function getURL(url) {
 }
 
 
-function getUsers(url) {
+function getUsers(url) {// check if it is better to get only the email, use id, url instead of all the fields
     const response = fetch('https://i-tracing.ilucca-test.net/api/v3/users/', {
         method: 'get',
         headers: {

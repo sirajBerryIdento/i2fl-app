@@ -37,7 +37,15 @@ async function updateLeaves(user, minDate, maxDate, month, year) {
     }, []);
     ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
     const FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);
-    FITNET_LEAVES_trans = await MainFunctions.transform(FITNET_LEAVES, StaticValues.IsFitnetFormat, null);
+    returned_fitnet_Leaves = []
+
+
+    for (const element of FITNET_LEAVES) {
+        if(new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET)){
+            returned_fitnet_Leaves.push(element);
+        }
+    }
+    FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null);
 
     console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
     console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
@@ -147,7 +155,7 @@ async function integrator(user, r) {
     maxDate = Helper.getDateInFourMonths();
     month = Helper.getMonth();
     year = Helper.getYear();
-    //just test it now on siraj: id 1583
+
     let userMail = await getUserMail(user.url);
     console.log("usermail ", userMail.data.login, userMail.data.mail); // to be used in the mail property 
     await updateLeaves(userMail, minDate, maxDate, month, year);

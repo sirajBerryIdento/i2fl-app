@@ -29,6 +29,8 @@ async function getAcceptedLuccaLeaves(user, minDate, maxDate, month, year) {
     return [finalResultArray[0], finalResultArray[1]];
 }
 async function getConfirmedLuccaLeavesFun(array) {
+    creationDate = StaticValues.STARTING_DATE_LIVE_LUCCA
+
     let unsortedAcceptedDates = []
     j = 0;
     const map = new Map();
@@ -36,20 +38,22 @@ async function getConfirmedLuccaLeavesFun(array) {
     while (array && j < array.length) {
         let t = array[j];
         aURL = await LuccaService.getURL(t.url).then(response => response.json());
-        url = aURL.data.leavePeriod.url;
-        if (url) {
-            tempURL = await LuccaService.getURL(url).then(response => response.json());
-            if (tempURL.data.isConfirmed) {
-                unsortedAcceptedDates.push(aURL.data.startDateTime)
-
-                let tempDate = Helper.toLuccaDateFormate(Helper.getDateFromString(t.id, "-", 1));
-                if (map.get(tempDate) == null) {
-                    map.set(tempDate, Helper.getDateFromString(t.id, "-", 2))
-                }
-                else {
-                    AM_PM.add(map.get(tempDate));
-                    AM_PM.add(Helper.getDateFromString(t.id, "-", 2))
-                    map.set(tempDate, AM_PM)
+        if (new Date( aURL.data.creationDate)>new Date(creationDate)) {// this is important to avoid deleting leaves created before the deployment of i2fl
+            url = aURL.data.leavePeriod.url;
+            if (url) {
+                tempURL = await LuccaService.getURL(url).then(response => response.json());
+                if (tempURL.data.isConfirmed) {
+                    unsortedAcceptedDates.push(aURL.data.startDateTime)
+    
+                    let tempDate = Helper.toLuccaDateFormate(Helper.getDateFromString(t.id, "-", 1));
+                    if (map.get(tempDate) == null) {
+                        map.set(tempDate, Helper.getDateFromString(t.id, "-", 2))
+                    }
+                    else {
+                        AM_PM.add(map.get(tempDate));
+                        AM_PM.add(Helper.getDateFromString(t.id, "-", 2))
+                        map.set(tempDate, AM_PM)
+                    }
                 }
             }
         }

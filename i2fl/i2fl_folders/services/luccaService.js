@@ -23,7 +23,7 @@ function getURL(url) {
 
 
 function getUsers(url) {// check if it is better to get only the email, use id, url instead of all the fields
-    const response = fetch('https://i-tracing.ilucca-test.net/api/v3/users/', {
+    const response = fetch('https://i-tracing.ilucca-test.net/api/v3/users?fields=id,firstName,lastName,mail,login,personalEmail', {
         method: 'get',
         headers: {
             Authorization: StaticValues.LUCCA_ACCESS_TOKEN
@@ -31,4 +31,4 @@ function getUsers(url) {// check if it is better to get only the email, use id, 
     });
     return response;
 }
-module.exports = { getLeavesAPI, getURL,getUsers };
+module.exports = { getLeavesAPI, getURL, getUsers };

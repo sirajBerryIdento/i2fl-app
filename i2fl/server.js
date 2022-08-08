@@ -28,7 +28,7 @@ async function updateLeaves(user, minDate, maxDate, month, year) {
     //get leave objects
 
     // *****make this a function****
-    const ACPT_LUCCA_LEAVES = src.reduce((res, date, idx, self) => {
+    var ACPT_LUCCA_LEAVES = src.reduce((res, date, idx, self) => {
         const rangeStart = !idx || new Date(date) - new Date(self[idx - 1]) > (864e5 / 2),
             rangeEnd = idx == self.length - 1 || new Date(self[idx + 1]) - new Date(date) > (864e5 / 2)
         if (rangeStart) res.push({ startDate: date, endDate: date })
@@ -36,15 +36,17 @@ async function updateLeaves(user, minDate, maxDate, month, year) {
         return res
     }, []);
     ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
-    const FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);
+    var FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);
     returned_fitnet_Leaves = []
 
-
-    for (const element of FITNET_LEAVES) {
-        if(new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET)){
-            returned_fitnet_Leaves.push(element);
+    if(FITNET_LEAVES.status==200) {
+        for (const element of FITNET_LEAVES) {
+            if(new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET)){
+                returned_fitnet_Leaves.push(element);
+            }
         }
     }
+    
     FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null);
 
     console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
@@ -52,15 +54,17 @@ async function updateLeaves(user, minDate, maxDate, month, year) {
     
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     console.log("identical",identical);
-
+    
     if (!identical) {
         //first we need to delete the leaves
         let idsToDelete = []
         //if the leaves in fitnet are no longer in lucca, this means that we need to deltet them from lucca
         oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
-        idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
-        console.log("leaves to delete from fitnet: ", idsToDelete);
-        await deleteLeaves(idsToDelete);
+        if(oldLeavesToDelete.length>0) {
+            idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
+            console.log("leaves to delete from fitnet: ", idsToDelete);
+            await deleteLeaves(idsToDelete);
+        }
         console.log("after the delete functions,");
 
         //ONCE WE FINISH deleting the leaves, we start adding the new ones
@@ -104,9 +108,9 @@ async function addLeaves(arr, user) {
 }
 function addLuccaLeave(luccaLeave, user, r) {
     let luccaLeaveToFitnet = {
-        "employeeId": user.data.id,
+        "employeeId": user.id,
         "employee": "",
-        "email": user.data.login,
+        "email": user.login,
         "typeId": StaticValues.LEAVE_TYPE,
         "beginDate": luccaLeave.startDate,
         "endDate": luccaLeave.endDate,
@@ -134,37 +138,40 @@ function fitnetDeleteLeave(id, r) {
 
 //first function to execute
 async function initialize() {
-    
+    /*
+    const cron = require('node-cron');
+    cron.schedule(StaticValues.scheduled_date, async () => {
+        var users = await getUsers();
+        for (const user of users?.data?.items) {
+            console.log("user", user);
+            // if (user.id == 1583) {
+            //     await new Promise(r => integrator(user, r));
+            // }
+        }
+        console.log('finished looping!');
+    });*/
+
+
+// testing
     var users = await getUsers();
-    for (const user of users?.data?.items) {
-        if (user.id == 1583) {// is statment is only for testing: only for testing 
+    var idento_users = _.filter(users?.data?.items, function(element){ return element.mail.includes('idento'); })
+    for (const user of idento_users) {
+        if (user.id == 1583) {
             await new Promise(r => integrator(user, r));
         }
     }
-    console.log('finished looping!');
-    
-   
-    const cron = require('node-cron');
-    cron.schedule(StaticValues.scheduled_date, () => {
-        console.log('Hello World');
-    });
 }
-
 async function integrator(user, r) {
     minDate = Helper.getTodaysDate();
     maxDate = Helper.getDateInFourMonths();
     month = Helper.getMonth();
     year = Helper.getYear();
 
-    let userMail = await getUserMail(user.url);
-    console.log("usermail ", userMail.data.login, userMail.data.mail); // to be used in the mail property 
-    await updateLeaves(userMail, minDate, maxDate, month, year);
+    await updateLeaves(user, minDate, maxDate, month, year);
     console.log('i waited until we got out of the if statment');
     r();
 }
-function getUserMail(url) {
-    return LuccaService.getURL(url).then(response => response.json());
-}
+
 function getUsers() {
     return LuccaService.getUsers().then(response => response.json());
 }

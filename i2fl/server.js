@@ -48,9 +48,15 @@ async function updateLeaves(user, minDate, maxDate, month, year) {
     
     FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null);
     
-    console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
-    console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
+    // sort the arrays in ascending order
+    FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort(
+        (objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),
+      );
     
+       ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort(
+        (objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),
+      );
+
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     console.log("identical",identical);
     
@@ -99,6 +105,10 @@ async function getIdsToDelete(arr, fitnetLeaves) {
 
     }
     return tempArray;
+}
+function returnDate(date) {//  "26/08/2022"
+	let splitted = date.split("/"); //["26","08","2022"]
+	return new Date( Number(splitted[2]), Number(splitted[1]), Number(splitted[0]))
 }
 
 async function addLeaves(arr, user) {

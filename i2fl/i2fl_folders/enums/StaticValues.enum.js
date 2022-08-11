@@ -10,6 +10,8 @@ module.exports = Object.freeze({
     scheduled_date_afterEvery4Sec: "*/4 * * * * *", // to be deleted
     STARTING_DATE_LIVE_LUCCA: '2022-08-02',
     STARTING_DATE_LIVE_FITNET: '01/08/2022',
+    URL_Lucca: 'https://i-tracing.ilucca-test.net',
+    URL_fitnet: 'https://evaluation.fitnetmanager.com',
     //temporary values   
     FITNET_ACESS_TOKEN: 'Basic c2lyYWouYmVycnlAaWRlbnRvLmZyOnRlc3QxMjMh', // replace this by the token of the administrator
     LUCCA_ACCESS_TOKEN: 'lucca application=cdbaa741-16c5-4b23-bb3c-0cccbed64b67'

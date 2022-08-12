@@ -38,7 +38,6 @@ async function getConfirmedLuccaLeavesFun(array) {
     while (array && j < array.length) {
         let t = array[j];
         aURL = await LuccaService.getURL(t.url).then(response => response.json());
-        // console.log(aURL.data);
         if (
             new Date( aURL.data.creationDate)>new Date(creationDate) // this is important to avoid deleting leaves created before the deployment of i2fl
                 
@@ -72,6 +71,7 @@ async function getFitnetLeaves(month, year) {
     return fitnet_Leaves;
 }
 async function transform(array, isType, map) {
+    console.log("map", map);
     let index = 0;
     commonFormatArray = [];
     while (index < array.length) {
@@ -89,8 +89,12 @@ async function transform(array, isType, map) {
             let luccaTempDate = array[index];//ex: 2022-08-08T00:00:00 
             let luccaStartDate_luccaFormat = Helper.getDateFromString(luccaTempDate.startDate, 'T', 0);//ex: 2022-08-08
             let luccaEndDate_luccaFormat = Helper.getDateFromString(luccaTempDate.endDate, 'T', 0);//ex: 2022-08-08
-            let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).size != 2 && map.get(luccaStartDate_luccaFormat).includes('AM')) ? true : false;
-            let luccaIsEndDay = (map.get(luccaStartDate_luccaFormat).size != 2 && map.get(luccaStartDate_luccaFormat).includes('PM')) ? true : false;
+
+            // let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).size != 2 && map.get(luccaStartDate_luccaFormat).includes('AM')) ? true : false;
+            // let luccaIsEndDay = ((map.get(luccaStartDate_luccaFormat).size != 2 && map.get(luccaStartDate_luccaFormat).includes('PM')) ) ? true : false;
+
+            let luccaIsMidDay = ((map.get(luccaStartDate_luccaFormat).size != 2)  && (map.get(luccaStartDate_luccaFormat).includes('PM'))); 
+            let luccaIsEndDay = ((map.get(luccaEndDate_luccaFormat).size != 2) && (map.get(luccaEndDate_luccaFormat).includes('AM')));
 
             let luccaStartDate_fitnetFormat = Helper.transformToDateFormat(luccaStartDate_luccaFormat);//ex: 2022-08-08
             let luccaEndDate_fitnetFormat = Helper.transformToDateFormat(luccaEndDate_luccaFormat);//ex: 2022-08-08

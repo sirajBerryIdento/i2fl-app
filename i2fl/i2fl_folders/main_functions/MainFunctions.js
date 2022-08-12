@@ -5,7 +5,7 @@ const StaticValues = require('../enums/StaticValues.enum')
 
 var _ = require('underscore')._;
 
-async function getLuccaLeavesFun(minDate, maxDate, ownerId, month, year) {
+async function getLuccaLeavesFun(ownerId, month, year) {
     let items;
     endOfMonth = new Date(year, month, 0).getDate();
     reshapedendOfMonth= ((endOfMonth > 9) ? endOfMonth : '0' + endOfMonth)
@@ -19,8 +19,8 @@ async function getLuccaLeavesFun(minDate, maxDate, ownerId, month, year) {
 }
 
 
-async function getAcceptedLuccaLeaves(user, minDate, maxDate, month, year) {
-    var items = getLuccaLeavesFun(minDate, maxDate, user.id, month, year);
+async function getAcceptedLuccaLeaves(user, month, year) {
+    var items = getLuccaLeavesFun(user.id, month, year);
     var tempLeaves = []
     await items.then(re => {
         tempLeaves = re;

@@ -16,9 +16,9 @@ LeaveType = StaticValues.LEAVE_TYPE;
 
 
 
-async function updateLeaves(user, minDate, maxDate, month, year) {
+async function updateLeaves(user, month, year) {
     var AMPMOftheDays = new Map(); //will be used to decide if the leave object starts or ends with a half day
-    var leaves = await MainFunctions.getAcceptedLuccaLeaves(user, minDate, maxDate, month, year);
+    var leaves = await MainFunctions.getAcceptedLuccaLeaves(user, month, year);
 
     AMPMOftheDays = leaves[0]// gets sets of AM,PM arrays for each date
     var listLuccaLeaveDates = Helper.sortArray(leaves[1]);
@@ -159,13 +159,11 @@ async function initialize() {
     }
 }
 async function integrator(user, r) {
-    minDate = Helper.getTodaysDate();
-    maxDate = Helper.getDateInFourMonths();
-    month = Helper.getMonth();
-    year = Helper.getYear();
+    let month = Helper.getMonth();// current month
+    let year = Helper.getYear();// current year
 
-    await updateLeaves(user, minDate, maxDate, month, year);
-    console.log('i waited until we got out of the if statment');
+    await updateLeaves(user, month, year);
+    console.log('I waited until we got out of the if statment');
     r();
 }
 

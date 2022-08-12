@@ -19,7 +19,6 @@ LeaveType = StaticValues.LEAVE_TYPE;
 async function updateLeaves(user, month, year) {
     var AMPMOftheDays = new Map(); //will be used to decide if the leave object starts or ends with a half day
     var leaves = await MainFunctions.getAcceptedLuccaLeaves(user, month, year);
-
     AMPMOftheDays = leaves[0]// gets sets of AM,PM arrays for each date
     var listLuccaLeaveDates = Helper.sortArray(leaves[1]);
     //get lucca leave objects
@@ -31,18 +30,25 @@ async function updateLeaves(user, month, year) {
     var returned_fitnet_Leaves = [] // used to get fitnet leaves submitted after the static date: STARTING_DATE_LIVE_FITNET
     if(FITNET_LEAVES.status==200 || FITNET_LEAVES.length>0) {
         for (const element of FITNET_LEAVES) {
-            if(new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET)){// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE_FITNET  
+            if(
+                new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET) 
+                && 
+                (new Date(element.askingDate)>= new Date())// if true it means that you the user already took his day off
+
+            ){// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE_FITNET  
                 returned_fitnet_Leaves.push(element);
             }
         }
     }
-    
+    console.log("returned_fitnet_Leaves", returned_fitnet_Leaves);
     var FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null); // transform fitnet leaves to the common form
     
     // sort the arrays in ascending order: to be able to compare them in the identical function
     FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     //******************** Compare them here 
+    console.log("FITNET_LEAVES_trans", FITNET_LEAVES_trans);
+    console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     console.log("identical",identical);
     

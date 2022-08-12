@@ -38,7 +38,12 @@ async function getConfirmedLuccaLeavesFun(array) {
     while (array && j < array.length) {
         let t = array[j];
         aURL = await LuccaService.getURL(t.url).then(response => response.json());
-        if (new Date( aURL.data.creationDate)>new Date(creationDate)) {// this is important to avoid deleting leaves created before the deployment of i2fl
+        // console.log(aURL.data);
+        if (
+            new Date( aURL.data.creationDate)>new Date(creationDate) // this is important to avoid deleting leaves created before the deployment of i2fl
+                && ( new Date(aURL.data.endsAt) >= new Date())// if true it means that you the user already took his day off
+        ) 
+        {
             url = aURL.data.leavePeriod.url;
             if (url) {
                 tempURL = await LuccaService.getURL(url).then(response => response.json());

@@ -35,6 +35,7 @@ async function fitnetPostLeave(fitnetLeaveRequest) {
         },
         body: JSON.stringify(fitnetLeaveRequest),
     })
+    return response
 }
 
 

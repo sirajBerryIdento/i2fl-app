@@ -71,7 +71,6 @@ async function getFitnetLeaves(month, year) {
     return fitnet_Leaves;
 }
 async function transform(array, isType, map) {
-    console.log("map", map);
     let index = 0;
     commonFormatArray = [];
     while (index < array.length) {

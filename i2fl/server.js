@@ -24,38 +24,38 @@ async function updateLeaves(user, month, year) {
     //get lucca leave objects
     var ACPT_LUCCA_LEAVES = Helper.getLuccaLeavesObj(listLuccaLeaveDates); // gets all leave requests as objects, object: from start to end date
     var ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, AMPMOftheDays); // transform lucca leaves to the common form
-    console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
+    console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
     //*************************
 
     var FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);// get fitnet leaves in a given month and year
     var returned_fitnet_Leaves = [] // used to get fitnet leaves submitted after the static date: STARTING_DATE_LIVE_FITNET
-    if(FITNET_LEAVES.status==200 || FITNET_LEAVES.length>0) {
+    if (FITNET_LEAVES.status == 200 || FITNET_LEAVES.length > 0) {
         for (const element of FITNET_LEAVES) {
-            if(
-                new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET) 
+            if (
+                new Date(element.askingDate) > new Date(StaticValues.STARTING_DATE_LIVE_FITNET)
 
-            ){// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE_FITNET  
+            ) {// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE_FITNET  
                 returned_fitnet_Leaves.push(element);
             }
         }
     }
     var FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null); // transform fitnet leaves to the common form
-    
+
     // sort the arrays in ascending order: to be able to compare them in the identical function
     FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     //******************** Compare them here 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-    console.log("identical",identical);
-    
-    
+    console.log("identical", identical);
+
+
     if (!identical) {
         //first we need to delete the leaves in fitnet: the user deleted them from lucca so they should no longer appear in fitnet
         let idsToDelete = []// fitnet delete api takes the id as attribute so we need to collect the ids to delete them first
-        
+
         //if the leaves in fitnet are no longer in lucca, this means that we need to delete them from lucca
         var oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
-        if(oldLeavesToDelete.length>0) {
+        if (oldLeavesToDelete.length > 0) {
             idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);// takes the fitnet objects from the fitnet array with the common format and cmpare them to the array with the fitnet format
             console.log("leaves to delete from fitnet: ", idsToDelete);
             await deleteLeaves(idsToDelete);
@@ -80,9 +80,9 @@ async function getIdsToDelete(arr, fitnetLeaves) {
     for (const toDeleteLeave of arr) {
         for (const obj of fitnetLeaves) {
             if (
-                (obj.beginDate === toDeleteLeave.startDate )
+                (obj.beginDate === toDeleteLeave.startDate)
                 &&
-                ( obj.endDate === toDeleteLeave.endDate)
+                (obj.endDate === toDeleteLeave.endDate)
                 &&
                 (obj.startMidday === toDeleteLeave.isMidDay)
                 &&
@@ -96,8 +96,8 @@ async function getIdsToDelete(arr, fitnetLeaves) {
     return tempArray;
 }
 function returnDate(date) {//  "26/08/2022"
-	let splitted = date.split("/"); //["26","08","2022"]
-	return new Date( Number(splitted[2]), Number(splitted[1]), Number(splitted[0]))
+    let splitted = date.split("/"); //["26","08","2022"]
+    return new Date(Number(splitted[2]), Number(splitted[1]), Number(splitted[0]))
 }
 
 async function addLeaves(arr, user) {
@@ -119,7 +119,7 @@ function addLuccaLeave(luccaLeave, user, r) {
     // setTimeout(() => {
     //     console.log("user added successfully", luccaLeaveToFitnet);
     // }, 2000);
-    FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res=>{ console.log("user added successfully", res);}).catch(err=>{console.log("err: ",err);});
+    FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res => { console.log("user added successfully", res); }).catch(err => { console.log("err: ", err); });
 
     r();
 }
@@ -129,7 +129,7 @@ async function deleteLeaves(ids) {
     }
 }
 function fitnetDeleteLeave(id, r) {
-    FitnetManagerService.fitnetDeleteLeave(id).then(res=>{console.log("id deleted", id)}).catch(err=>{console.log("error while deleting: ",err);});
+    FitnetManagerService.fitnetDeleteLeave(id).then(res => { console.log("id deleted", id) }).catch(err => { console.log("error while deleting: ", err); });
     r();
 }
 
@@ -149,9 +149,9 @@ async function initialize() {
     });*/
 
 
-// testing
+    // testing
     var users = await getUsers();
-    var idento_users = _.filter(users?.data?.items, function(element){ return element.mail.includes('idento'); })
+    var idento_users = _.filter(users?.data?.items, function (element) { return element.mail.includes('idento'); })
     for (const user of idento_users) {
         if (user.id == 1583) {
             await new Promise(r => integrator(user, r));

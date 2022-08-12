@@ -67,7 +67,7 @@ async function updateLeaves(user, month, year) {
         var newLeavesToAdd = MainFunctions.difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
         console.log("leaves to add to fitnet: ", newLeavesToAdd);
         await addLeaves(newLeavesToAdd, user)
-        console.log('you should see this after we finish updating the leave requests for each user');
+        console.log('you should see this after we finish updating the leave requests for ', user.id);
     }
     else {
         console.log("No changes, the user did not update his vacations yet.");

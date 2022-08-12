@@ -24,6 +24,7 @@ async function updateLeaves(user, month, year) {
     //get lucca leave objects
     var ACPT_LUCCA_LEAVES = Helper.getLuccaLeavesObj(listLuccaLeaveDates); // gets all leave requests as objects, object: from start to end date
     var ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, AMPMOftheDays); // transform lucca leaves to the common form
+    console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
     //*************************
 
     var FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);// get fitnet leaves in a given month and year
@@ -38,15 +39,12 @@ async function updateLeaves(user, month, year) {
             }
         }
     }
-    console.log("returned_fitnet_Leaves", returned_fitnet_Leaves);
     var FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null); // transform fitnet leaves to the common form
     
     // sort the arrays in ascending order: to be able to compare them in the identical function
     FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     //******************** Compare them here 
-    console.log("FITNET_LEAVES_trans", FITNET_LEAVES_trans);
-    console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     console.log("identical",identical);
     

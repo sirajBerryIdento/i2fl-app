@@ -45,4 +45,24 @@ function getDateInFourMonths() {
 function lastdayOfTheMonth(y,m){
     return  new Date(y, m +1, 0).getDate();
     }
-module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, getTodaysDate, getDateInFourMonths, lastdayOfTheMonth, getMonth, getYear};
+
+
+function sortArray(src) {
+    src.sort(function (a, b) {
+        return new Date(a) - new Date(b)
+    })  
+    return src;  
+}
+
+function getLuccaLeavesObj(src) {
+    var arr = src.reduce((res, date, idx, self) => {
+        const rangeStart = !idx || new Date(date) - new Date(self[idx - 1]) > (864e5 / 2),
+            rangeEnd = idx == self.length - 1 || new Date(self[idx + 1]) - new Date(date) > (864e5 / 2)
+        if (rangeStart) res.push({ startDate: date, endDate: date })
+        else if (rangeEnd) res[res.length - 1]['endDate'] = date
+        return res
+    }, []);
+    return arr;
+}
+
+module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, getTodaysDate, getDateInFourMonths, lastdayOfTheMonth, getMonth, getYear, sortArray, getLuccaLeavesObj};

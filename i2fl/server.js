@@ -17,57 +17,44 @@ LeaveType = StaticValues.LEAVE_TYPE;
 
 
 async function updateLeaves(user, minDate, maxDate, month, year) {
-    var map = new Map();
-    leaves = await MainFunctions.getAcceptedLuccaLeaves(user, minDate, maxDate, month, year);
-    map = leaves[0]
-    src = leaves[1]
-    // *****make this a function****
-    src.sort(function (a, b) {
-        return new Date(a) - new Date(b)
-    })
-    //get leave objects
+    var AMPMOftheDays = new Map(); //will be used to decide if the leave object starts or ends with a half day
+    var leaves = await MainFunctions.getAcceptedLuccaLeaves(user, minDate, maxDate, month, year);
 
-    // *****make this a function****
-    var ACPT_LUCCA_LEAVES = src.reduce((res, date, idx, self) => {
-        const rangeStart = !idx || new Date(date) - new Date(self[idx - 1]) > (864e5 / 2),
-            rangeEnd = idx == self.length - 1 || new Date(self[idx + 1]) - new Date(date) > (864e5 / 2)
-        if (rangeStart) res.push({ startDate: date, endDate: date })
-        else if (rangeEnd) res[res.length - 1]['endDate'] = date
-        return res
-    }, []);
-    ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, map);
-    var FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);
-    returned_fitnet_Leaves = []
+    AMPMOftheDays = leaves[0]// gets sets of AM,PM arrays for each date
+    var listLuccaLeaveDates = Helper.sortArray(leaves[1]);
+    //get lucca leave objects
+    var ACPT_LUCCA_LEAVES = Helper.getLuccaLeavesObj(listLuccaLeaveDates); // gets all leave requests as objects, object: from start to end date
+    var ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, AMPMOftheDays); // transform lucca leaves to the common form
+    //*************************
+
+    var FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);// get fitnet leaves in a given month and year
+    var returned_fitnet_Leaves = [] // used to get fitnet leaves submitted after the static date: STARTING_DATE_LIVE_FITNET
     if(FITNET_LEAVES.status==200 || FITNET_LEAVES.length>0) {
         for (const element of FITNET_LEAVES) {
-            if(new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET)){
+            if(new Date(element.askingDate)> new Date(StaticValues.STARTING_DATE_LIVE_FITNET)){// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE_FITNET  
                 returned_fitnet_Leaves.push(element);
             }
         }
     }
     
-    FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null);
+    var FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null); // transform fitnet leaves to the common form
     
-    // sort the arrays in ascending order
-    FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort(
-        (objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),
-      );
-    
-       ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort(
-        (objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),
-      );
-
+    // sort the arrays in ascending order: to be able to compare them in the identical function
+    FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
+    ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
+    //******************** Compare them here 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     console.log("identical",identical);
     
-    /*
+    
     if (!identical) {
-        //first we need to delete the leaves
-        let idsToDelete = []
-        //if the leaves in fitnet are no longer in lucca, this means that we need to deltet them from lucca
-        oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
+        //first we need to delete the leaves in fitnet: the user deleted them from lucca so they should no longer appear in fitnet
+        let idsToDelete = []// fitnet delete api takes the id as attribute so we need to collect the ids to delete them first
+        
+        //if the leaves in fitnet are no longer in lucca, this means that we need to delete them from lucca
+        var oldLeavesToDelete = MainFunctions.difference(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans)
         if(oldLeavesToDelete.length>0) {
-            idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);
+            idsToDelete = await getIdsToDelete(oldLeavesToDelete, FITNET_LEAVES);// takes the fitnet objects from the fitnet array with the common format and cmpare them to the array with the fitnet format
             console.log("leaves to delete from fitnet: ", idsToDelete);
             await deleteLeaves(idsToDelete);
         }
@@ -75,14 +62,14 @@ async function updateLeaves(user, minDate, maxDate, month, year) {
 
         //ONCE WE FINISH deleting the leaves, we start adding the new ones
         //if lucca leaves are not in fitnet leaves, this means that we need to add them to fitnet
-        newLeavesToAdd = MainFunctions.difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
+        var newLeavesToAdd = MainFunctions.difference(ACPT_LUCCA_LEAVES_trans, FITNET_LEAVES_trans)
         console.log("leaves to add to fitnet: ", newLeavesToAdd);
         await addLeaves(newLeavesToAdd, user)
         console.log('you should see this after we finish updating the leave requests for each user');
     }
     else {
         console.log("No changes, the user did not update his vacations yet.");
-    }*/
+    }
 }
 
 
@@ -190,6 +177,3 @@ initialize();
 
 app.listen(process.env.PORT || 8088, function () {
 })
-
-//functions
-//***********************************************************************************************************************/

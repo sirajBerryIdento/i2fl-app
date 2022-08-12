@@ -9,7 +9,7 @@ module.exports = Object.freeze({
     scheduled_date: '0 0 1 * * *', // run eveyday at 1 AM
     scheduled_date_afterEvery4Sec: "*/4 * * * * *", // to be deleted
     STARTING_DATE_LIVE_LUCCA: '2022-08-02',
-    STARTING_DATE_LIVE_FITNET: '01/08/2022',
+    STARTING_DATE_LIVE_FITNET: '02/08/2022',
     URL_Lucca: 'https://i-tracing.ilucca-test.net',
     URL_fitnet: 'https://evaluation.fitnetmanager.com',
     //temporary values   

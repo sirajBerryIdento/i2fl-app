@@ -105,7 +105,7 @@ async function addLeaves(arr, user) {
         await new Promise(r => addLuccaLeave(luccaLeave, user, r));
     }
 }
-function addLuccaLeave(luccaLeave, user, r) {
+async function addLuccaLeave(luccaLeave, user, r) {
     let luccaLeaveToFitnet = {
         "employeeId": user.id,
         "employee": "",
@@ -119,7 +119,7 @@ function addLuccaLeave(luccaLeave, user, r) {
     // setTimeout(() => {
     //     console.log("user added successfully", luccaLeaveToFitnet);
     // }, 2000);
-    FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res => { console.log("user added successfully", res); }).catch(err => { console.log("err: ", err); });
+    await FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res => { console.log("user added successfully", res); }).catch(err => { console.log("err: ", err); });
 
     r();
 }
@@ -128,8 +128,8 @@ async function deleteLeaves(ids) {
         await new Promise(r => fitnetDeleteLeave(id, r));
     }
 }
-function fitnetDeleteLeave(id, r) {
-    FitnetManagerService.fitnetDeleteLeave(id).then(res => { console.log("id deleted", id) }).catch(err => { console.log("error while deleting: ", err); });
+async function fitnetDeleteLeave(id, r) {
+    await FitnetManagerService.fitnetDeleteLeave(id).then(res => { console.log("id deleted", id) }).catch(err => { console.log("error while deleting: ", err); });
     r();
 }
 

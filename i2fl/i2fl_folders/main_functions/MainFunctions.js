@@ -29,7 +29,7 @@ async function getAcceptedLuccaLeaves(user, month, year) {
     return [finalResultArray[0], finalResultArray[1]];
 }
 async function getConfirmedLuccaLeavesFun(array) {
-    creationDate = StaticValues.STARTING_DATE_LIVE_LUCCA
+    creationDate = StaticValues.STARTING_DATE_LIVE
 
     let unsortedAcceptedDates = []
     j = 0;

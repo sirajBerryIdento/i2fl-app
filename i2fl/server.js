@@ -24,30 +24,34 @@ async function updateLeaves(user, month, year) {
     //get lucca leave objects
     var ACPT_LUCCA_LEAVES = Helper.getLuccaLeavesObj(listLuccaLeaveDates); // gets all leave requests as objects, object: from start to end date
     var ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, AMPMOftheDays); // transform lucca leaves to the common form
-    console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
     //*************************
 
     var FITNET_LEAVES = await MainFunctions.getFitnetLeaves(month, year);// get fitnet leaves in a given month and year
-    var returned_fitnet_Leaves = [] // used to get fitnet leaves submitted after the static date: STARTING_DATE_LIVE_FITNET
+    console.log("FITNET_LEAVES",FITNET_LEAVES);
+    var returned_fitnet_Leaves = [] // used to get fitnet leaves submitted after the static date: STARTING_DATE_LIVE
     if (FITNET_LEAVES.status == 200 || FITNET_LEAVES.length > 0) {
         for (const element of FITNET_LEAVES) {
-            if (
-                new Date(element.askingDate) > new Date(StaticValues.STARTING_DATE_LIVE_FITNET)
-
-            ) {// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE_FITNET  
+               if (
+                new Date(Helper.FitnetToluccaDateConvertor(element.askingDate)) > new Date(StaticValues.STARTING_DATE_LIVE)
+            ) {// ignore all fitnet leave requests submitted before the static date: STARTING_DATE_LIVE  
                 returned_fitnet_Leaves.push(element);
             }
+
+            returned_fitnet_Leaves.push(element);
+
         }
     }
+    // console.log("returned_fitnet_Leaves",returned_fitnet_Leaves);
     var FITNET_LEAVES_trans = await MainFunctions.transform(returned_fitnet_Leaves, StaticValues.IsFitnetFormat, null); // transform fitnet leaves to the common form
 
     // sort the arrays in ascending order: to be able to compare them in the identical function
     FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
+    console.log("ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
+    console.log("FITNET_LEAVES_trans",FITNET_LEAVES_trans);
     //******************** Compare them here 
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
     console.log("identical", identical);
-
 
     if (!identical) {
         //first we need to delete the leaves in fitnet: the user deleted them from lucca so they should no longer appear in fitnet

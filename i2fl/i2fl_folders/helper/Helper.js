@@ -16,6 +16,12 @@ function luccaToFitnetDateConvertor(date) {
     return ((day > 9) ? day : '0' + day) + "/" + ((month > 9) ? month : '0' + month) + "/" + year;
 }
 
+function FitnetToluccaDateConvertor(date) {
+    let day = parseInt (getDateFromString(date, '/',0)) 
+    let month = parseInt(getDateFromString(date, '/',1)) 
+    let year = parseInt(getDateFromString(date, '/',2)) 
+    return year+ "-" + ((month > 9) ? month : '0' + month) + "-" + ((day > 9) ? day : '0' + day);
+}
 function getMonth(){
     var today = new Date();
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -50,4 +56,4 @@ function getLuccaLeavesObj(src) {
     return arr;
 }
 
-module.exports = { getDateFromString, transformToDateFormat, luccaToFitnetDateConvertor, toLuccaDateFormate, lastdayOfTheMonth, getMonth, getYear, sortArray, getLuccaLeavesObj};
+module.exports = { getDateFromString, transformToDateFormat,FitnetToluccaDateConvertor, luccaToFitnetDateConvertor, toLuccaDateFormate, lastdayOfTheMonth, getMonth, getYear, sortArray, getLuccaLeavesObj};

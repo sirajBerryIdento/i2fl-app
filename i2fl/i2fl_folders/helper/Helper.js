@@ -15,7 +15,7 @@ function luccaToFitnetDateConvertor(date) {
     let year = parseInt(getDateFromString(date, '-',2)) 
     return ((day > 9) ? day : '0' + day) + "/" + ((month > 9) ? month : '0' + month) + "/" + year;
 }
-
+//dd/MM/yyyy to yyyy-MM-dd
 function FitnetToluccaDateConvertor(date) {
     let day = parseInt (getDateFromString(date, '/',0)) 
     let month = parseInt(getDateFromString(date, '/',1)) 

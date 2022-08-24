@@ -8,8 +8,8 @@ var _ = require('underscore')._;
 async function getLuccaLeavesFun(ownerId, month, year) {
     let items;
     endOfMonth = new Date(year, month, 0).getDate();
-    reshapedendOfMonth= ((endOfMonth > 9) ? endOfMonth : '0' + endOfMonth)
-    dateParamParent = "until,"+ year+'-'+month+'-'+endOfMonth;// '2021-01-31'
+    reshapedendOfMonth = ((endOfMonth > 9) ? endOfMonth : '0' + endOfMonth)
+    dateParamParent = "until," + year + '-' + month + '-' + endOfMonth;// '2021-01-31'
     // dateParamParent = 'between,' + minDate + ',' + maxDate;
     getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
     getConfirmedLuccaLeaves = await getLuccaLeavesProm.then(l => {
@@ -39,16 +39,15 @@ async function getConfirmedLuccaLeavesFun(array) {
         let t = array[j];
         aURL = await LuccaService.getURL(t.url).then(response => response.json());
         if (
-            new Date( aURL.data.creationDate)>new Date(creationDate) // this is important to avoid deleting leaves created before the deployment of i2fl
-                
-        ) 
-        {
+            new Date(aURL.data.creationDate) > new Date(creationDate) // this is important to avoid deleting leaves created before the deployment of i2fl
+
+        ) {
             url = aURL.data.leavePeriod.url;
             if (url) {
                 tempURL = await LuccaService.getURL(url).then(response => response.json());
                 if (tempURL.data.isConfirmed) {
                     unsortedAcceptedDates.push(aURL.data.startDateTime)
-    
+
                     let tempDate = Helper.toLuccaDateFormate(Helper.getDateFromString(t.id, "-", 1));
                     if (map.get(tempDate) == null) {
                         map.set(tempDate, Helper.getDateFromString(t.id, "-", 2))
@@ -66,11 +65,11 @@ async function getConfirmedLuccaLeavesFun(array) {
     AM_PM = []
     return [map, unsortedAcceptedDates];
 }
-async function getFitnetLeaves(month, year) {
-    fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(StaticValues.COMPANY_ID, month, year).then(response => response.json());
+async function getFitnetLeaves(companyId, month, year, fitnetnID) {
+    fitnet_Leaves = await FitnetManagerService.fitnetGetLeave(companyId, month, year, fitnetnID).then(response => response.json());
     return fitnet_Leaves;
 }
-async function transform(array, isType, map) {
+async function transform(array, isType, map, id) {
     let index = 0;
     commonFormatArray = [];
     while (index < array.length) {
@@ -82,6 +81,7 @@ async function transform(array, isType, map) {
                 endDate: temp.endDate,
                 isMidDay: temp.startMidday,
                 isEndDay: temp.endMidday,
+                employeeId: id,
             }
         }
         else if (isType == 1) {//lucca
@@ -92,7 +92,7 @@ async function transform(array, isType, map) {
             // let luccaIsMidDay = (map.get(luccaStartDate_luccaFormat).size != 2 && map.get(luccaStartDate_luccaFormat).includes('AM')) ? true : false;
             // let luccaIsEndDay = ((map.get(luccaStartDate_luccaFormat).size != 2 && map.get(luccaStartDate_luccaFormat).includes('PM')) ) ? true : false;
 
-            let luccaIsMidDay = ((map.get(luccaStartDate_luccaFormat).size != 2)  && (map.get(luccaStartDate_luccaFormat).includes('PM'))); 
+            let luccaIsMidDay = ((map.get(luccaStartDate_luccaFormat).size != 2) && (map.get(luccaStartDate_luccaFormat).includes('PM')));
             let luccaIsEndDay = ((map.get(luccaEndDate_luccaFormat).size != 2) && (map.get(luccaEndDate_luccaFormat).includes('AM')));
 
             let luccaStartDate_fitnetFormat = Helper.transformToDateFormat(luccaStartDate_luccaFormat);//ex: 2022-08-08
@@ -103,6 +103,7 @@ async function transform(array, isType, map) {
                 endDate: Helper.luccaToFitnetDateConvertor(luccaEndDate_fitnetFormat),
                 isMidDay: luccaIsMidDay,
                 isEndDay: luccaIsEndDay,
+                employeeId: id,
             }
         }
         await commonFormatArray.push(integratorFormat)
@@ -122,5 +123,21 @@ function difference(array) {
 };
 
 
+async function getReturnedFitnetLeaves(FITNET_LEAVES, id) {
+    let returned_fitnet_Leaves = [];
+    tempArray = []
+    if (FITNET_LEAVES.status == 200 || FITNET_LEAVES.length > 0) {
+        for (const element of FITNET_LEAVES) {
+            if(await validElement(element, id)) {
+                tempArray.push(element);
+            }
+        }
+    }
+    returned_fitnet_Leaves = tempArray;
+    return returned_fitnet_Leaves;
+}
+async function validElement(element, id) {
+    return ( (element.employeeId===id) &&  new Date(Helper.FitnetToluccaDateConvertor(element.askingDate)) > new Date(StaticValues.STARTING_DATE_LIVE))?element:null;
+}
 
-module.exports = { getLuccaLeavesFun, getAcceptedLuccaLeaves, getConfirmedLuccaLeavesFun, getFitnetLeaves, transform, difference};
+module.exports = { getReturnedFitnetLeaves, getLuccaLeavesFun, getAcceptedLuccaLeaves, getConfirmedLuccaLeavesFun, getFitnetLeaves, transform, difference };

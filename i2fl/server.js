@@ -113,10 +113,10 @@ async function addLuccaLeave(luccaLeave, user, r) {
         "startMidday": luccaLeave.isMidDay,
         "endMidday": luccaLeave.isEndDay
     }
-    setTimeout(() => {
-        console.log("user added successfully", luccaLeaveToFitnet);
-    }, 1000);
-    // await FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res => { console.log("user added successfully", res); }).catch(err => { console.log("err: ", err); });
+    // setTimeout(() => {
+    //     console.log("user added successfully", luccaLeaveToFitnet);
+    // }, 1000);
+    await FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res => { console.log("user added successfully", res); }).catch(err => { console.log("err: ", err); });
 
     r();
 }
@@ -126,7 +126,7 @@ async function deleteLeaves(ids) {
     }
 }
 async function fitnetDeleteLeave(id, r) {
-    // await FitnetManagerService.fitnetDeleteLeave(id).then(res => { console.log("id deleted", id) }).catch(err => { console.log("error while deleting: ", err); });
+    await FitnetManagerService.fitnetDeleteLeave(id).then(res => { console.log("id deleted", id) }).catch(err => { console.log("error while deleting: ", err); });
     r();
 }
 

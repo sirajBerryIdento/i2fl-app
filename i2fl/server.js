@@ -16,7 +16,7 @@ LeaveType = StaticValues.LEAVE_TYPE;
 
 
 
-async function updateLeaves(user, month, year,id) {
+async function updateLeaves(user, month, year, id) {
     var AMPMOftheDays = new Map(); //will be used to decide if the leave object starts or ends with a half day
     var leaves = await MainFunctions.getAcceptedLuccaLeaves(user, month, year);
     AMPMOftheDays = leaves[0]// gets sets of AM,PM arrays for each date
@@ -26,11 +26,11 @@ async function updateLeaves(user, month, year,id) {
     var ACPT_LUCCA_LEAVES_trans = await MainFunctions.transform(ACPT_LUCCA_LEAVES, StaticValues.IsLuccaFormat, AMPMOftheDays, id); // transform lucca leaves to the common form
     //*************************
     var FITNET_LEAVES = []
-    if(user.fitnet_id) {
-         FITNET_LEAVES = await MainFunctions.getFitnetLeaves(null, month, year,user.fitnet_id);// get fitnet leaves in a given month and year
+    if (user.fitnet_id) {
+        FITNET_LEAVES = await MainFunctions.getFitnetLeaves(null, month, year, user.fitnet_id);// get fitnet leaves in a given month and year
     }
     else {
-         FITNET_LEAVES = await MainFunctions.getFitnetLeaves(StaticValues.COMPANY_ID, month, year, null);// get fitnet leaves in a given month and year
+        FITNET_LEAVES = await MainFunctions.getFitnetLeaves(StaticValues.COMPANY_ID, month, year, null);// get fitnet leaves in a given month and year
     }
     var returned_fitnet_Leaves = [] // used to get fitnet leaves submitted after the static date: STARTING_DATE_LIVE
     returned_fitnet_Leaves = await MainFunctions.getReturnedFitnetLeaves(FITNET_LEAVES, id);
@@ -39,10 +39,10 @@ async function updateLeaves(user, month, year,id) {
     FITNET_LEAVES_trans = FITNET_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     ACPT_LUCCA_LEAVES_trans = ACPT_LUCCA_LEAVES_trans.sort((objA, objB) => Number(returnDate(objA.startDate)) - Number(returnDate(objB.startDate)),);
     //******************** Compare them here 
-    console.log("compare FITNET_LEAVES_trans",FITNET_LEAVES_trans);
-    console.log("compare ACPT_LUCCA_LEAVES_trans",ACPT_LUCCA_LEAVES_trans);
+    console.log("FITNET_LEAVES_trans", FITNET_LEAVES_trans);
+    console.log("ACPT_LUCCA_LEAVES_trans", ACPT_LUCCA_LEAVES_trans);
     identical = _.isEqual(FITNET_LEAVES_trans, ACPT_LUCCA_LEAVES_trans);
-    console.log("identical", identical);
+    console.log("identical Arrays: ", identical);
 
     if (!identical) {
         //first we need to delete the leaves in fitnet: the user deleted them from lucca so they should no longer appear in fitnet
@@ -102,7 +102,7 @@ async function addLeaves(arr, user) {
     }
 }
 async function addLuccaLeave(luccaLeave, user, r) {
-    console.log('user whom we are adding conges to',user);
+    console.log('user whom we are adding conges to', user);
     let luccaLeaveToFitnet = {
         "employeeId": user.fitnet_id,
         "employee": "",
@@ -115,7 +115,7 @@ async function addLuccaLeave(luccaLeave, user, r) {
     }
     setTimeout(() => {
         console.log("user added successfully", luccaLeaveToFitnet);
-    }, 0);
+    }, 1000);
     // await FitnetManagerService.fitnetPostLeave(luccaLeaveToFitnet).then(res => { console.log("user added successfully", res); }).catch(err => { console.log("err: ", err); });
 
     r();
@@ -156,6 +156,7 @@ async function initialize() {
 }
 async function iterateUsers(user, employees_users) {
     if (user.id == 1583) {
+        console.log("checking user id " + user.id + " now.");
         // let tempUser = {
         //     "id": getIdEmployeeId(user.firstName, user.lastName, user.login, employees_users),
         //     "email": user.login
@@ -167,7 +168,7 @@ async function iterateUsers(user, employees_users) {
         }
         await new Promise(r => integrator(tempUser, r, tempUser.fitnet_id));
     }
-    else if(user.id == 1490) {
+    else if (user.id == 1490) {
         // let tempUser = {
         //     "id": getIdEmployeeId(user.firstName, user.lastName, "admin@fitnetapplication.com", employees_users),
         //     "email": 'admin@fitnetapplication.com'
@@ -177,20 +178,19 @@ async function iterateUsers(user, employees_users) {
             "fitnet_id": await getIdEmployeeId('Malik', 'ABAD ', 'admin@fitnetapplication.com', employees_users),
             "email": 'admin@fitnetapplication.com'
         }
+        console.log("checking user id " + user.id + " now.");
         await new Promise(r => integrator(tempUser, r, tempUser.fitnet_id));
+        console.log("finished this user with id number: "+ user.id +", go to next one,");
     }
     else {
-        console.log("next");
+        console.log("-->Next-->");
     }
-    console.log("******************************wait for each user to finish the integration**********************************************************************************************");
-
 }
 async function integrator(user, r, id) {
     let month = Helper.getMonth();// current month
     let year = Helper.getYear();// current year
 
     await updateLeaves(user, month, year, id);
-    console.log('I waited until we got out of the if statment');
     r();
 }
 
@@ -202,9 +202,8 @@ function getFitnetUsers() {
     return FitnetManagerService.getEmployees().then(response => response.json());
 }
 function getIdEmployeeId(fn, ln, mail, employees) {
-    console.log("fn, ln, mail",fn, ln, mail);
     for (const emp of employees) {
-        if(emp.email===mail && emp.surname===fn && emp.name===ln){
+        if (emp.email === mail && emp.surname === fn && emp.name === ln) {
             return emp.employee_id;
         }
     }

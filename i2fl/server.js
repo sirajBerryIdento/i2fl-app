@@ -212,6 +212,17 @@ function getIdEmployeeId(fn, ln, mail, employees) {
 
 //initial function
 initialize();
+// test();
+function test () {
+    let y = Helper.getYear();
+    let m = Helper.getMonth();
+    let ld = Helper.lastdayOfTheMonth(m, y);
 
+    minDate = Helper.getYear()+ '-' + m + '-' +'01';
+    maxDate = Helper.getYear()+ '-'+ m + '-'+  ld;
+    
+    dateParamParent = 'between,' + minDate + ',' + maxDate;
+    console.log("dateParamParent", dateParamParent);
+}
 app.listen(process.env.PORT || 8088, function () {
 })

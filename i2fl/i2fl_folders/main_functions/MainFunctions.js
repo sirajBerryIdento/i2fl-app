@@ -9,8 +9,18 @@ async function getLuccaLeavesFun(ownerId, month, year) {
     let items;
     endOfMonth = new Date(year, month, 0).getDate();
     reshapedendOfMonth = ((endOfMonth > 9) ? endOfMonth : '0' + endOfMonth)
-    dateParamParent = "until," + year + '-' + month + '-' + endOfMonth;// '2021-01-31'
-    // dateParamParent = 'between,' + minDate + ',' + maxDate;
+    // dateParamParent = "until," + year + '-' + month + '-' + endOfMonth;// '2021-01-31'
+    // minDate = "2022-10-01";
+    // maxDate = "2022-10-31";
+    
+
+    let y = Helper.getYear();
+    let m = Helper.getMonth();
+    let ld = Helper.lastdayOfTheMonth(m, y);
+    minDate = y+ '-' + m + '-' +'01';
+    maxDate = y+ '-'+ m + '-'+  ld;
+    dateParamParent = 'between,' + minDate + ',' + maxDate;
+    console.log("dateParamParent", dateParamParent);
     getLuccaLeavesProm = LuccaService.getLeavesAPI(ownerId, dateParamParent, StaticValues.PAGING).then(response => response.json());
     getConfirmedLuccaLeaves = await getLuccaLeavesProm.then(l => {
         items = l?.data?.items;

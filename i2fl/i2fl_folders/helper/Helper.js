@@ -36,7 +36,9 @@ function getYear () {
 function lastdayOfTheMonth(y,m){
     return  new Date(y, m +1, 0).getDate();
     }
-
+function getFirstDayOfMonth(year, month) {
+    return new Date(year, month, 1);
+    }
 
 function sortArray(src) {
     src.sort(function (a, b) {
@@ -56,4 +58,4 @@ function getLuccaLeavesObj(src) {
     return arr;
 }
 
-module.exports = { getDateFromString, transformToDateFormat,FitnetToluccaDateConvertor, luccaToFitnetDateConvertor, toLuccaDateFormate, lastdayOfTheMonth, getMonth, getYear, sortArray, getLuccaLeavesObj};
+module.exports = { getFirstDayOfMonth, getDateFromString, transformToDateFormat,FitnetToluccaDateConvertor, luccaToFitnetDateConvertor, toLuccaDateFormate, lastdayOfTheMonth, getMonth, getYear, sortArray, getLuccaLeavesObj};

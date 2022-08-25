@@ -106,7 +106,7 @@ async function addLuccaLeave(luccaLeave, user, r) {
     let luccaLeaveToFitnet = {
         "employeeId": user.fitnet_id,
         "employee": "",
-        "email": user.login,
+        "email": user.email,
         "typeId": StaticValues.LEAVE_TYPE,
         "beginDate": luccaLeave.startDate,
         "endDate": luccaLeave.endDate,
@@ -160,7 +160,12 @@ async function iterateUsers(user, employees_users) {
         //     "id": getIdEmployeeId(user.firstName, user.lastName, user.login, employees_users),
         //     "email": user.login
         // }
-        await new Promise(r => integrator(user, r, 18));
+        let tempUser = {
+            "id": user.id,
+            "fitnet_id": await getIdEmployeeId("Siraj Test", "Berry", user.login, employees_users),
+            "email": user.login
+        }
+        await new Promise(r => integrator(tempUser, r, tempUser.fitnet_id));
     }
     else if(user.id == 1490) {
         // let tempUser = {
@@ -197,6 +202,7 @@ function getFitnetUsers() {
     return FitnetManagerService.getEmployees().then(response => response.json());
 }
 function getIdEmployeeId(fn, ln, mail, employees) {
+    console.log("fn, ln, mail",fn, ln, mail);
     for (const emp of employees) {
         if(emp.email===mail && emp.surname===fn && emp.name===ln){
             return emp.employee_id;
